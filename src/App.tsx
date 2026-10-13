@@ -1,4 +1,5 @@
-import { Route, Routes } from 'react-router'
+import { Navigate, Route, Routes } from 'react-router'
+import { useAuth } from './auth/AuthContext'
 import { AppShell } from './components/AppShell'
 import { RequireAuth } from './components/RequireAuth'
 import { BarbersPage } from './pages/BarbersPage'
@@ -9,12 +10,16 @@ import { MyAppointmentsPage } from './pages/MyAppointmentsPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { VerifyEmailPage } from './pages/VerifyEmailPage'
+import { BarberHoursPage } from './pages/barber/BarberHoursPage'
+import { BarberProfilePage } from './pages/barber/BarberProfilePage'
+import { BarberSchedulePage } from './pages/barber/BarberSchedulePage'
+import { BarberServicesPage } from './pages/barber/BarberServicesPage'
 
 export function App() {
   return (
     <Routes>
       <Route element={<AppShell />}>
-        <Route index element={<BarbersPage />} />
+        <Route index element={<Home />} />
         <Route path="barbers/:id" element={<BookingPage />} />
         <Route
           path="appointments"
@@ -24,6 +29,10 @@ export function App() {
             </RequireAuth>
           }
         />
+        <Route path="barber" element={<RequireAuth role="BARBER"><BarberSchedulePage /></RequireAuth>} />
+        <Route path="barber/services" element={<RequireAuth role="BARBER"><BarberServicesPage /></RequireAuth>} />
+        <Route path="barber/hours" element={<RequireAuth role="BARBER"><BarberHoursPage /></RequireAuth>} />
+        <Route path="barber/profile" element={<RequireAuth role="BARBER"><BarberProfilePage /></RequireAuth>} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
         <Route path="check-email" element={<CheckEmailPage />} />
@@ -32,4 +41,10 @@ export function App() {
       </Route>
     </Routes>
   )
+}
+
+/** Barbers land on their schedule; everyone else on the barber list. */
+function Home() {
+  const { session } = useAuth()
+  return session?.role === 'BARBER' ? <Navigate to="/barber" replace /> : <BarbersPage />
 }

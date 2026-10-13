@@ -1,5 +1,16 @@
 import { api } from './client'
-import type { Appointment, Availability, Barber, Role, ServiceOffering, User } from './types'
+import type {
+  Appointment,
+  Availability,
+  Barber,
+  BarberProfileInput,
+  Role,
+  ServiceInput,
+  ServiceOffering,
+  TimeOff,
+  User,
+  WorkingHours,
+} from './types'
 
 export const authApi = {
   login: (email: string, password: string) =>
@@ -24,4 +35,31 @@ export const appointmentsApi = {
     api<Appointment>('/appointments', { method: 'POST', body }),
   mine: () => api<Appointment[]>('/appointments/me'),
   cancel: (id: number) => api<Appointment>(`/appointments/${id}/cancel`, { method: 'POST' }),
+}
+
+/** Endpoints for the logged-in barber's own profile, schedule and bookings. */
+export const barberMeApi = {
+  profile: () => api<Barber>('/barbers/me'),
+  createProfile: (body: BarberProfileInput) => api<Barber>('/barbers/me', { method: 'POST', body }),
+  updateProfile: (body: BarberProfileInput) => api<Barber>('/barbers/me', { method: 'PUT', body }),
+
+  appointments: (from: string, to: string) => api<Appointment[]>(`/barbers/me/appointments?from=${from}&to=${to}`),
+  confirm: (id: number) => api<Appointment>(`/barbers/me/appointments/${id}/confirm`, { method: 'POST' }),
+  reject: (id: number) => api<Appointment>(`/barbers/me/appointments/${id}/reject`, { method: 'POST' }),
+  cancel: (id: number) => api<Appointment>(`/barbers/me/appointments/${id}/cancel`, { method: 'POST' }),
+
+  services: () => api<ServiceOffering[]>('/barbers/me/services'),
+  createService: (body: ServiceInput) => api<ServiceOffering>('/barbers/me/services', { method: 'POST', body }),
+  updateService: (id: number, body: ServiceInput) =>
+    api<ServiceOffering>(`/barbers/me/services/${id}`, { method: 'PUT', body }),
+  deactivateService: (id: number) => api<void>(`/barbers/me/services/${id}`, { method: 'DELETE' }),
+
+  workingHours: () => api<WorkingHours[]>('/barbers/me/working-hours'),
+  saveWorkingHours: (body: WorkingHours[]) =>
+    api<WorkingHours[]>('/barbers/me/working-hours', { method: 'PUT', body }),
+
+  timeOff: () => api<TimeOff[]>('/barbers/me/time-off'),
+  addTimeOff: (body: { startDate: string; endDate: string; reason: string | null }) =>
+    api<TimeOff>('/barbers/me/time-off', { method: 'POST', body }),
+  deleteTimeOff: (id: number) => api<void>(`/barbers/me/time-off/${id}`, { method: 'DELETE' }),
 }
