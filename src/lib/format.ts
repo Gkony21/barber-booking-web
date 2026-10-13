@@ -45,3 +45,30 @@ export function bookableDays(count = 15, now = new Date()): DayOption[] {
   }
   return days
 }
+
+const timeFormat = new Intl.DateTimeFormat('el-GR', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: TIME_ZONE })
+const dayHeadingFormat = new Intl.DateTimeFormat('el-GR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: TIME_ZONE })
+
+/** "18:00" */
+export function formatTime(iso: string): string {
+  return timeFormat.format(new Date(iso))
+}
+
+/** The Athens calendar date of an instant, "YYYY-MM-DD". */
+export function athensDate(iso: string | Date): string {
+  return isoDateFormat.format(typeof iso === 'string' ? new Date(iso) : iso)
+}
+
+/** "Τετάρτη 14 Οκτωβρίου" */
+export function formatDayHeading(isoDate: string): string {
+  const [year, month, day] = isoDate.split('-').map(Number)
+  return dayHeadingFormat.format(new Date(Date.UTC(year, month - 1, day, 12)))
+}
+
+/** "15 Αυγ" style short date for ranges. */
+export function formatShortDate(isoDate: string): string {
+  const [year, month, day] = isoDate.split('-').map(Number)
+  return new Intl.DateTimeFormat('el-GR', { day: 'numeric', month: 'short', timeZone: TIME_ZONE }).format(
+    new Date(Date.UTC(year, month - 1, day, 12)),
+  )
+}

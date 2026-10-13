@@ -60,3 +60,37 @@ export interface User {
   phoneNumber: string | null
   role: Role
 }
+
+export type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY'
+
+export interface WorkingHours {
+  dayOfWeek: DayOfWeek
+  startTime: string // "HH:mm"
+  endTime: string
+}
+
+export interface TimeOff {
+  id: number
+  startDate: string // "YYYY-MM-DD", inclusive
+  endDate: string
+  reason: string | null
+  activeAppointments: number
+}
+
+export interface BarberProfileInput {
+  bio: string | null
+  experienceYears: number | null
+  specialty: string | null
+  address: string | null
+  city: string | null
+  latitude: number | null
+  longitude: number | null
+  autoConfirmBookings: boolean
+}
+
+export interface ServiceInput {
+  name: string
+  description: string | null
+  durationMinutes: number
+  price: number
+}

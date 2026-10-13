@@ -30,8 +30,9 @@ export function LoginPage() {
     setError(null)
     setUnverified(false)
     try {
-      await login(email, password)
-      navigate(next, { replace: true })
+      const session = await login(email, password)
+      // Barbers without a specific destination go straight to their schedule.
+      navigate(session.role === 'BARBER' && next === '/' ? '/barber' : next, { replace: true })
     } catch (e) {
       if (e instanceof ApiError && e.status === 401) setError(t('auth.invalidCredentials'))
       else if (e instanceof ApiError && e.code === 'EMAIL_NOT_VERIFIED') {
