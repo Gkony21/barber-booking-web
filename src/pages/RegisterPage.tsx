@@ -15,6 +15,7 @@ export function RegisterPage() {
   const [form, setForm] = useState({ name: '', email: '', phoneNumber: '', password: '' })
   const [confirm, setConfirm] = useState('')
   const [isBarber, setIsBarber] = useState(false)
+  const [acceptTerms, setAcceptTerms] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -30,7 +31,7 @@ export function RegisterPage() {
     setSubmitting(true)
     setError(null)
     try {
-      await authApi.register({ ...form, role: isBarber ? 'BARBER' : 'CUSTOMER' })
+      await authApi.register({ ...form, role: isBarber ? 'BARBER' : 'CUSTOMER', acceptTerms })
       navigate(`/check-email?email=${encodeURIComponent(form.email.trim())}`)
     } catch (e) {
       if (e instanceof ApiError && e.status === 409) setError(t('auth.emailTaken'))
@@ -74,9 +75,23 @@ export function RegisterPage() {
           <span className="font-medium">{t('auth.iAmBarber')}</span>
         </label>
 
+        <label className="flex cursor-pointer items-start gap-3 px-1 py-2 text-sm text-muted">
+          <input type="checkbox" checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)} className="mt-0.5 size-5 shrink-0 accent-accent" />
+          <span>
+            {t('auth.acceptTermsBefore')}
+            <Link to="/terms" target="_blank" className="font-semibold text-accent underline underline-offset-2">
+              {t('auth.acceptTermsTerms')}
+            </Link>
+            {t('auth.acceptTermsMiddle')}
+            <Link to="/privacy" target="_blank" className="font-semibold text-accent underline underline-offset-2">
+              {t('auth.acceptTermsPrivacy')}
+            </Link>
+          </span>
+        </label>
+
         {error && <Notice tone="error">{error}</Notice>}
 
-        <Button type="submit" disabled={submitting || !form.name || !form.email || form.password.length < 8 || confirm !== form.password}>
+        <Button type="submit" disabled={submitting || !form.name || !form.email || form.password.length < 8 || confirm !== form.password || !acceptTerms}>
           {t('auth.registerButton')}
         </Button>
       </form>

@@ -5,7 +5,7 @@ import { Logo } from './Logo'
 
 export function AppShell() {
   const { t } = useTranslation()
-  const { session, logout } = useAuth()
+  const { session } = useAuth()
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col">
@@ -14,9 +14,9 @@ export function AppShell() {
           <Logo height={30} label={t('app.name')} />
         </Link>
         {session ? (
-          <button onClick={logout} className="min-h-11 px-2 text-sm text-muted hover:text-ink">
-            {t('nav.logout')}
-          </button>
+          <Link to="/account" aria-label={t('nav.account')} className="flex size-11 items-center justify-center rounded-xl text-muted hover:bg-surface hover:text-ink">
+            <UserIcon />
+          </Link>
         ) : (
           <Link to="/login" className="flex min-h-11 items-center px-2 text-sm font-semibold text-accent">
             {t('nav.login')}
@@ -24,9 +24,18 @@ export function AppShell() {
         )}
       </header>
 
-      <main className="flex flex-1 flex-col px-5 pt-2 pb-28">
+      <main className="flex flex-1 flex-col px-5 pt-2 pb-6">
         <Outlet />
       </main>
+
+      <footer className={`flex justify-center gap-5 px-5 pt-4 text-xs text-muted ${session?.role === 'CUSTOMER' || session?.role === 'BARBER' ? 'pb-28' : 'pb-8'}`}>
+        <Link to="/terms" className="min-h-11 content-center hover:text-ink">
+          {t('nav.terms')}
+        </Link>
+        <Link to="/privacy" className="min-h-11 content-center hover:text-ink">
+          {t('nav.privacy')}
+        </Link>
+      </footer>
 
       {(session?.role === 'CUSTOMER' || session?.role === 'BARBER') && (
         <nav

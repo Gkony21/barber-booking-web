@@ -12,6 +12,9 @@ import { MyAppointmentsPage } from './pages/MyAppointmentsPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { VerifyEmailPage } from './pages/VerifyEmailPage'
+import { privacyPolicy, termsOfUse } from './legal/documents'
+import { AccountPage } from './pages/AccountPage'
+import { LegalPage } from './pages/LegalPage'
 import { AdminBarbersPage } from './pages/admin/AdminBarbersPage'
 import { BarberHoursPage } from './pages/barber/BarberHoursPage'
 import { BarberProfilePage } from './pages/barber/BarberProfilePage'
@@ -37,6 +40,9 @@ export function App() {
         <Route path="barber/hours" element={<RequireAuth role="BARBER"><BarberHoursPage /></RequireAuth>} />
         <Route path="barber/profile" element={<RequireAuth role="BARBER"><BarberProfilePage /></RequireAuth>} />
         <Route path="admin" element={<RequireAuth role="ADMIN"><AdminBarbersPage /></RequireAuth>} />
+        <Route path="account" element={<RequireAuth><AccountPage /></RequireAuth>} />
+        <Route path="terms" element={<LegalPage document={termsOfUse} />} />
+        <Route path="privacy" element={<LegalPage document={privacyPolicy} />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
         <Route path="check-email" element={<CheckEmailPage />} />

@@ -11,6 +11,7 @@ async function fillRegistration(password: string, confirm: string) {
   await user.type(screen.getByLabelText('Email'), 'maria@test.gr')
   await user.type(screen.getByLabelText('Κωδικός'), password)
   await user.type(screen.getByLabelText('Επιβεβαίωση κωδικού'), confirm)
+  await user.click(screen.getByRole('checkbox', { name: /αποδέχομαι τους Όρους χρήσης/ }))
   return user
 }
 

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { mediaUrl } from '../api/client'
@@ -7,7 +7,7 @@ import { barbersApi } from '../api/endpoints'
 import type { Barber } from '../api/types'
 import { Avatar } from '../components/Avatar'
 import { FadeLines } from '../components/Logo'
-import { ErrorState, Loading } from '../components/States'
+import { ErrorState, Loading, Notice } from '../components/States'
 import { formatPrice, nextFreeKind } from '../lib/format'
 
 export function BarbersPage() {
@@ -15,6 +15,8 @@ export function BarbersPage() {
   const [cityInput, setCityInput] = useState('')
   const [city, setCity] = useState('')
   const [onlyToday, setOnlyToday] = useState(false)
+  // e.g. "account deleted", passed along when navigating here
+  const notice = (useLocation().state as { notice?: string } | null)?.notice
 
   const barbers = useQuery({
     queryKey: ['barbers', city, onlyToday],
@@ -28,6 +30,7 @@ export function BarbersPage() {
 
   return (
     <div className="flex flex-col gap-5">
+      {notice && <Notice tone="success">{notice}</Notice>}
       <h1 className="pt-4 font-display text-5xl leading-[0.95] font-extrabold uppercase">{t('barbers.title')}</h1>
 
       <form onSubmit={onSearch} role="search" className="flex gap-2">
