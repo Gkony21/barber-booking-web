@@ -18,8 +18,9 @@ import type {
 export const authApi = {
   login: (email: string, password: string) =>
     api<{ token: string }>('/auth/login', { method: 'POST', body: { email, password } }),
-  register: (body: { name: string; email: string; phoneNumber: string; password: string; role: Role }) =>
+  register: (body: { name: string; email: string; phoneNumber: string; password: string; role: Role; acceptTerms: boolean }) =>
     api<User>('/auth/register', { method: 'POST', body }),
+  deleteAccount: (password: string) => api<void>('/users/me', { method: 'DELETE', body: { password } }),
   verifyEmail: (token: string) => api<void>('/auth/verify-email', { method: 'POST', body: { token } }),
   resendVerification: (email: string) =>
     api<void>('/auth/resend-verification', { method: 'POST', body: { email } }),
