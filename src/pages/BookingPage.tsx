@@ -9,6 +9,7 @@ import { useAuth } from '../auth/AuthContext'
 import { BackLink } from '../components/AppShell'
 import { FadeLines } from '../components/Logo'
 import { Button } from '../components/Button'
+import { DayPicker } from '../components/DayPicker'
 import { ErrorState, Loading, Notice } from '../components/States'
 import { errorMessage } from '../lib/errors'
 import { bookableDays, formatAppointmentTime, formatPrice } from '../lib/format'
@@ -123,26 +124,12 @@ function BookingForm({ barber, services }: { barber: Barber; services: { id: num
         })}
       </section>
 
-      <section className="flex flex-col gap-2.5">
-        <StepTitle>{t('booking.stepDay')}</StepTitle>
-        <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
-          {days.map((d) => {
-            const selected = d.iso === date
-            return (
-              <button
-                key={d.iso}
-                aria-pressed={selected}
-                aria-label={`${d.weekday} ${d.day}`}
-                onClick={() => choose(() => setDate(d.iso))}
-                className={`flex min-h-17 w-14 shrink-0 flex-col items-center justify-center gap-0.5 rounded-2xl ${selected ? 'bg-ink text-ground' : 'bg-surface text-ink'}`}
-              >
-                <span className="text-xs font-semibold uppercase">{d.weekday}</span>
-                <span className="font-display text-2xl font-extrabold">{d.day}</span>
-              </button>
-            )
-          })}
-        </div>
-      </section>
+      <DayPicker
+        title={<StepTitle>{t('booking.stepDay')}</StepTitle>}
+        days={days}
+        selected={date}
+        onSelect={(iso) => choose(() => setDate(iso))}
+      />
 
       <section className="flex flex-col gap-2.5">
         <StepTitle>{t('booking.stepTime')}</StepTitle>

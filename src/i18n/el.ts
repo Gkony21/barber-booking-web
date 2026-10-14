@@ -60,6 +60,8 @@ const el = {
     stepService: '1 · Υπηρεσία',
     stepDay: '2 · Μέρα',
     stepTime: '3 · Ώρα',
+    earlierDays: 'Προηγούμενες μέρες',
+    laterDays: 'Επόμενες μέρες',
     noServices: 'Ο barber δεν έχει ακόμα υπηρεσίες.',
     noTimes: 'Καμία ελεύθερη ώρα αυτή τη μέρα.',
     pickTime: 'Διάλεξε ώρα',
