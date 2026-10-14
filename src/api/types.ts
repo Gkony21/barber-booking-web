@@ -6,6 +6,8 @@ export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'CANCELLE
 
 export interface Barber {
   id: number
+  /** Short public link, e.g. "giorgos" for /giorgos. */
+  slug: string | null
   name: string
   avatarUrl: string | null
   bio: string | null
@@ -46,7 +48,8 @@ export interface Appointment {
   id: number
   barberId: number
   barberName: string
-  customerId: number
+  /** Null for bookings the barber entered for a phone or walk-in customer. */
+  customerId: number | null
   customerName: string
   customerPhone: string | null
   serviceId: number
@@ -56,6 +59,7 @@ export interface Appointment {
   startTime: string
   endTime: string
   status: AppointmentStatus
+  manual: boolean
   cancelledBy: 'CUSTOMER' | 'BARBER' | null
   note: string | null
 }
@@ -94,6 +98,7 @@ export interface BarberProfileInput {
   longitude: number | null
   autoConfirmBookings: boolean
   slotStepMinutes: 15 | 30
+  slug?: string
 }
 
 export interface ServiceInput {

@@ -10,6 +10,7 @@ import { BackLink } from '../components/AppShell'
 import { Avatar } from '../components/Avatar'
 import { Gallery } from '../components/Gallery'
 import { BookingTicket } from '../components/BookingTicket'
+import { NotFoundPage } from './NotFoundPage'
 import { FadeLines } from '../components/Logo'
 import { Button } from '../components/Button'
 import { DayPicker } from '../components/DayPicker'
@@ -19,14 +20,34 @@ import { bookableDays, formatPrice } from '../lib/format'
 
 export function BookingPage() {
   const { t } = useTranslation()
-  const barberId = Number(useParams().id)
+  // Reached as /barbers/12 or through the barber's short link, /giorgos.
+  const params = useParams()
+  const byLink = params.slug !== undefined
 
-  const barber = useQuery({ queryKey: ['barber', barberId], queryFn: () => barbersApi.get(barberId) })
-  const services = useQuery({ queryKey: ['services', barberId], queryFn: () => barbersApi.services(barberId) })
-  const photos = useQuery({ queryKey: ['photos', barberId], queryFn: () => barbersApi.photos(barberId) })
+  const barber = useQuery({
+    queryKey: byLink ? ['barber', 'link', params.slug] : ['barber', Number(params.id)],
+    queryFn: () => (byLink ? barbersApi.byLink(params.slug!) : barbersApi.get(Number(params.id))),
+  })
+  const barberId = barber.data?.id
+  const services = useQuery({
+    queryKey: ['services', barberId],
+    queryFn: () => barbersApi.services(barberId!),
+    enabled: barberId !== undefined,
+  })
+  const photos = useQuery({
+    queryKey: ['photos', barberId],
+    queryFn: () => barbersApi.photos(barberId!),
+    enabled: barberId !== undefined,
+  })
 
+  if (barber.isError) {
+    return byLink && barber.error instanceof ApiError && barber.error.status === 404 ? (
+      <NotFoundPage />
+    ) : (
+      <ErrorState error={barber.error} onRetry={() => barber.refetch()} />
+    )
+  }
   if (barber.isPending || services.isPending) return <Loading />
-  if (barber.isError) return <ErrorState error={barber.error} onRetry={() => barber.refetch()} />
   if (services.isError) return <ErrorState error={services.error} onRetry={() => services.refetch()} />
 
   return (

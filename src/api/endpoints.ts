@@ -38,6 +38,7 @@ export const barbersApi = {
     return api<Barber[]>(`/barbers${query ? `?${query}` : ''}`)
   },
   get: (id: number) => api<Barber>(`/barbers/${id}`),
+  byLink: (slug: string) => api<Barber>(`/barbers/by-link/${encodeURIComponent(slug)}`),
   services: (id: number) => api<ServiceOffering[]>(`/barbers/${id}/services`),
   photos: (id: number) => api<Photo[]>(`/barbers/${id}/photos`),
   availability: (id: number, serviceId: number, date: string) =>
@@ -57,6 +58,8 @@ export const barberMeApi = {
   createProfile: (body: BarberProfileInput) => api<Barber>('/barbers/me', { method: 'POST', body }),
   updateProfile: (body: BarberProfileInput) => api<Barber>('/barbers/me', { method: 'PUT', body }),
 
+  bookManually: (body: { serviceId: number; startTime: string; customerName: string; customerPhone?: string; note?: string }) =>
+    api<Appointment>('/barbers/me/appointments', { method: 'POST', body }),
   appointments: (from: string, to: string) => api<Appointment[]>(`/barbers/me/appointments?from=${from}&to=${to}`),
   confirm: (id: number) => api<Appointment>(`/barbers/me/appointments/${id}/confirm`, { method: 'POST' }),
   reject: (id: number) => api<Appointment>(`/barbers/me/appointments/${id}/reject`, { method: 'POST' }),

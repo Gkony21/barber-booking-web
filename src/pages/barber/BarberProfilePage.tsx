@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { ErrorState, Loading } from '../../components/States'
+import { BarberLinkCard } from './BarberLinkCard'
 import { AvatarEditor, WorkPhotosEditor } from './PhotoEditors'
 import { ProfileForm } from './ProfileForm'
 import { useMyBarber } from './useMyBarber'
@@ -17,6 +18,7 @@ export function BarberProfilePage() {
         {profile.data ? profile.data.name : t('barber.setupTitle')}
       </h1>
       {profile.data && <AvatarEditor barber={profile.data} />}
+      {profile.data && <BarberLinkCard key={profile.data.slug} barber={profile.data} />}
       <ProfileForm key={profile.data?.id ?? 'new'} barber={profile.data} />
       {profile.data && <WorkPhotosEditor />}
     </div>

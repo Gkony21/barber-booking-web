@@ -49,6 +49,8 @@ export function App() {
         <Route path="verify-email" element={<VerifyEmailPage />} />
         <Route path="forgot-password" element={<ForgotPasswordPage />} />
         <Route path="reset-password" element={<ResetPasswordPage />} />
+        {/* A barber's short link, e.g. /giorgos; fixed paths above always win. */}
+        <Route path=":slug" element={<BookingPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
