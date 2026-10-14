@@ -185,6 +185,25 @@ const el = {
       SUNDAY: 'Κυριακή',
     },
   },
+  admin: {
+    title: 'Barbers',
+    tabs: {
+      PENDING: 'Σε αναμονή',
+      APPROVED: 'Εγκεκριμένοι',
+      SUSPENDED: 'Σε αναστολή',
+    },
+    empty: {
+      PENDING: 'Κανένας barber δεν περιμένει έγκριση.',
+      APPROVED: 'Κανένας εγκεκριμένος barber ακόμα.',
+      SUSPENDED: 'Κανένας barber σε αναστολή.',
+    },
+    signedUp: 'Εγγραφή {{date}}',
+    approve: 'Έγκριση',
+    suspend: 'Αναστολή',
+    restore: 'Επαναφορά',
+    confirmSuspend: 'Αναστολή του {{name}}; Δεν θα εμφανίζεται στους πελάτες και δεν θα μπορούν να τον κλείσουν.',
+    approved: 'Ο {{name}} εγκρίθηκε και εμφανίζεται πλέον στους πελάτες.',
+  },
   notFound: {
     title: 'Δεν βρέθηκε',
     body: 'Η σελίδα που ψάχνεις δεν υπάρχει.',

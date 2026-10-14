@@ -31,8 +31,9 @@ export function LoginPage() {
     setUnverified(false)
     try {
       const session = await login(email, password)
-      // Barbers without a specific destination go straight to their schedule.
-      navigate(session.role === 'BARBER' && next === '/' ? '/barber' : next, { replace: true })
+      // Without a specific destination, barbers go to their schedule and admins to approvals.
+      const home = session.role === 'BARBER' ? '/barber' : session.role === 'ADMIN' ? '/admin' : '/'
+      navigate(next === '/' ? home : next, { replace: true })
     } catch (e) {
       if (e instanceof ApiError && e.status === 401) setError(t('auth.invalidCredentials'))
       else if (e instanceof ApiError && e.code === 'EMAIL_NOT_VERIFIED') {
