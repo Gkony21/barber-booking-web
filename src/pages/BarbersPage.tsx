@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { barbersApi } from '../api/endpoints'
 import type { Barber } from '../api/types'
+import { Avatar } from '../components/Avatar'
 import { ErrorState, Loading } from '../components/States'
 
 export function BarbersPage() {
@@ -67,9 +68,7 @@ function BarberCard({ barber }: { barber: Barber }) {
       to={`/barbers/${barber.id}`}
       className="flex min-h-20 items-center gap-4 rounded-2xl bg-surface p-4 transition-colors hover:bg-surface-2"
     >
-      <span aria-hidden="true" className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-surface-2 font-display text-xl font-extrabold text-accent">
-        {initials(barber.name)}
-      </span>
+      <Avatar name={barber.name} url={barber.avatarUrl} size={56} />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="truncate font-display text-2xl leading-tight font-extrabold uppercase">{barber.name}</span>
         <span className="truncate text-sm text-muted">{place}</span>
@@ -79,11 +78,3 @@ function BarberCard({ barber }: { barber: Barber }) {
   )
 }
 
-function initials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]!.toUpperCase())
-    .join('')
-}
