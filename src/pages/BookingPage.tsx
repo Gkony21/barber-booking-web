@@ -7,6 +7,8 @@ import { appointmentsApi, barbersApi } from '../api/endpoints'
 import type { Appointment, Barber } from '../api/types'
 import { useAuth } from '../auth/AuthContext'
 import { BackLink } from '../components/AppShell'
+import { Avatar } from '../components/Avatar'
+import { Gallery } from '../components/Gallery'
 import { FadeLines } from '../components/Logo'
 import { Button } from '../components/Button'
 import { DayPicker } from '../components/DayPicker'
@@ -20,6 +22,7 @@ export function BookingPage() {
 
   const barber = useQuery({ queryKey: ['barber', barberId], queryFn: () => barbersApi.get(barberId) })
   const services = useQuery({ queryKey: ['services', barberId], queryFn: () => barbersApi.services(barberId) })
+  const photos = useQuery({ queryKey: ['photos', barberId], queryFn: () => barbersApi.photos(barberId) })
 
   if (barber.isPending || services.isPending) return <Loading />
   if (barber.isError) return <ErrorState error={barber.error} onRetry={() => barber.refetch()} />
@@ -31,6 +34,7 @@ export function BookingPage() {
         <BackLink to="/" label={t('nav.back')} />
       </div>
       <BarberHeader barber={barber.data} />
+      {photos.data && <Gallery title={t('booking.gallery')} photos={photos.data} />}
       {services.data.length === 0 ? (
         <p className="text-muted">{t('booking.noServices')}</p>
       ) : (
@@ -45,8 +49,13 @@ function BarberHeader({ barber }: { barber: Barber }) {
   const place = [barber.shopName ?? t('barbers.independent'), barber.address ?? barber.city].filter(Boolean).join(' · ')
   return (
     <section className="flex flex-col gap-1.5">
-      <p className="text-sm font-semibold tracking-wider text-accent uppercase">{t('booking.bookWith')}</p>
-      <h1 className="font-display text-5xl leading-none font-extrabold uppercase">{barber.name}</h1>
+      <div className="flex items-end gap-4">
+        {barber.avatarUrl && <Avatar name={barber.name} url={barber.avatarUrl} size={72} />}
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <p className="text-sm font-semibold tracking-wider text-accent uppercase">{t('booking.bookWith')}</p>
+          <h1 className="font-display text-5xl leading-none font-extrabold break-words uppercase">{barber.name}</h1>
+        </div>
+      </div>
       <p className="flex items-center gap-1.5 text-sm text-muted">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" />

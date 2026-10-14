@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { adminApi } from '../../api/endpoints'
 import type { AdminBarber, BarberStatus } from '../../api/types'
+import { Avatar } from '../../components/Avatar'
 import { Button } from '../../components/Button'
 import { ErrorState, Loading, Notice } from '../../components/States'
 import { errorMessage } from '../../lib/errors'
@@ -68,8 +69,11 @@ function BarberCard({ barber, onApproved }: { barber: AdminBarber; onApproved: (
 
   return (
     <article className="flex flex-col gap-3 rounded-2xl bg-surface p-4">
-      <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-3">
+        <Avatar name={barber.name} url={barber.avatarUrl} size={48} />
         <h2 className="font-display text-2xl leading-tight font-extrabold uppercase">{barber.name}</h2>
+      </div>
+      <div className="flex flex-col gap-1">
         {barber.specialty && <p className="text-sm text-accent">{barber.specialty}</p>}
         {place && <p className="text-sm text-muted">{place}</p>}
         <p className="text-sm text-muted">{t('admin.signedUp', { date: formatShortDate(athensDate(barber.createdAt)) })}</p>

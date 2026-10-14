@@ -26,6 +26,7 @@ function api(bookResponse: { status?: number; json?: unknown }) {
   return mockApi({
     'GET /barbers/1': () => ({ json: barber }),
     'GET /barbers/1/services': () => ({ json: services }),
+    'GET /barbers/1/photos': () => ({ json: [] }),
     'GET /barbers/1/availability?serviceId=7&date=2026-10-13': () => ({
       json: { barberId: 1, serviceId: 7, date: '2026-10-13', durationMinutes: 30, startTimes: ['17:00', '18:00'] },
     }),

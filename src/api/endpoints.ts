@@ -4,6 +4,7 @@ import type {
   Appointment,
   Availability,
   Barber,
+  Photo,
   BarberProfileInput,
   BarberStatus,
   Role,
@@ -28,6 +29,7 @@ export const barbersApi = {
   list: (city?: string) => api<Barber[]>(`/barbers${city ? `?city=${encodeURIComponent(city)}` : ''}`),
   get: (id: number) => api<Barber>(`/barbers/${id}`),
   services: (id: number) => api<ServiceOffering[]>(`/barbers/${id}/services`),
+  photos: (id: number) => api<Photo[]>(`/barbers/${id}/photos`),
   availability: (id: number, serviceId: number, date: string) =>
     api<Availability>(`/barbers/${id}/availability?serviceId=${serviceId}&date=${date}`),
 }
@@ -60,6 +62,12 @@ export const barberMeApi = {
   saveWorkingHours: (body: WorkingHours[]) =>
     api<WorkingHours[]>('/barbers/me/working-hours', { method: 'PUT', body }),
 
+  setAvatar: (image: Blob) => api<Barber>('/barbers/me/avatar', { method: 'PUT', body: fileForm(image) }),
+  removeAvatar: () => api<Barber>('/barbers/me/avatar', { method: 'DELETE' }),
+  photos: () => api<Photo[]>('/barbers/me/photos'),
+  addPhoto: (image: Blob) => api<Photo>('/barbers/me/photos', { method: 'POST', body: fileForm(image) }),
+  deletePhoto: (id: number) => api<void>(`/barbers/me/photos/${id}`, { method: 'DELETE' }),
+
   timeOff: () => api<TimeOff[]>('/barbers/me/time-off'),
   addTimeOff: (body: { startDate: string; endDate: string; reason: string | null }) =>
     api<TimeOff>('/barbers/me/time-off', { method: 'POST', body }),
@@ -70,4 +78,10 @@ export const adminApi = {
   barbers: (status: BarberStatus) => api<AdminBarber[]>(`/admin/barbers?status=${status}`),
   setStatus: (id: number, status: BarberStatus) =>
     api<AdminBarber>(`/admin/barbers/${id}/status`, { method: 'PATCH', body: { status } }),
+}
+
+function fileForm(image: Blob): FormData {
+  const form = new FormData()
+  form.append('file', image, 'photo.jpg')
+  return form
 }

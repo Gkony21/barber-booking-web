@@ -35,9 +35,16 @@ export function setUnauthorizedHandler(handler: (() => void) | null) {
   onUnauthorized = handler
 }
 
+/** Full address of an image the API returns as a path like "/media/abc.jpg". */
+export function mediaUrl(path: string): string {
+  return path.startsWith('http') ? path : API_URL + path
+}
+
 export async function api<T>(path: string, options: { method?: string; body?: unknown } = {}): Promise<T> {
   const headers: Record<string, string> = {}
-  if (options.body !== undefined) headers['Content-Type'] = 'application/json'
+  const isForm = options.body instanceof FormData
+  // The browser sets the multipart boundary itself for FormData.
+  if (options.body !== undefined && !isForm) headers['Content-Type'] = 'application/json'
   if (authToken) headers['Authorization'] = `Bearer ${authToken}`
 
   let response: Response
@@ -45,7 +52,7 @@ export async function api<T>(path: string, options: { method?: string; body?: un
     response = await fetch(API_URL + path, {
       method: options.method ?? 'GET',
       headers,
-      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      body: isForm ? (options.body as FormData) : options.body !== undefined ? JSON.stringify(options.body) : undefined,
     })
   } catch {
     throw new NetworkError()

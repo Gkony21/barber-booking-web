@@ -7,6 +7,7 @@ export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'CANCELLE
 export interface Barber {
   id: number
   name: string
+  avatarUrl: string | null
   bio: string | null
   experienceYears: number | null
   specialty: string | null
@@ -102,6 +103,7 @@ export interface AdminBarber {
   id: number
   userId: number
   name: string
+  avatarUrl: string | null
   email: string
   phoneNumber: string | null
   specialty: string | null
@@ -110,4 +112,9 @@ export interface AdminBarber {
   shopName: string | null
   status: BarberStatus
   createdAt: string
+}
+
+export interface Photo {
+  id: number
+  url: string
 }

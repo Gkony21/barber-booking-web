@@ -37,7 +37,7 @@ export function mockApi(routes: Record<string, Handler>) {
   const fetchMock = vi.fn(async (url: string, init: RequestInit = {}) => {
     const { pathname, search } = new URL(url)
     const key = `${init.method ?? 'GET'} ${pathname}${search}`
-    const body = init.body ? JSON.parse(init.body as string) : undefined
+    const body = init.body instanceof FormData ? init.body : init.body ? JSON.parse(init.body as string) : undefined
     calls.push({ key, body, headers: (init.headers ?? {}) as Record<string, string> })
     const handler = routes[key]
     if (!handler) throw new Error(`Unexpected request: ${key}`)
