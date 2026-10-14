@@ -18,6 +18,11 @@ export interface Barber {
   slotStepMinutes: 15 | 30
   shopId: number | null
   shopName: string | null
+  coverUrl: string | null
+  photoCount: number
+  fromPrice: number | null
+  /** ISO time with offset of the first free start, or null when nothing is free in the booking window. */
+  nextAvailable: string | null
 }
 
 export interface ServiceOffering {

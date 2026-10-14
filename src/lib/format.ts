@@ -72,3 +72,13 @@ export function formatShortDate(isoDate: string): string {
     new Date(Date.UTC(year, month - 1, day, 12)),
   )
 }
+
+const shortDayFormat = new Intl.DateTimeFormat('el-GR', { weekday: 'short', day: 'numeric', timeZone: TIME_ZONE })
+
+/** How a barber's next free time reads on a card: today, tomorrow, or "Πέμ 15". */
+export function nextFreeKind(iso: string, now = new Date()): { kind: 'today' | 'tomorrow' | 'later'; day: string; time: string } {
+  const date = athensDate(iso)
+  const [today, tomorrow] = bookableDays(2, now).map((d) => d.iso)
+  const kind = date === today ? 'today' : date === tomorrow ? 'tomorrow' : 'later'
+  return { kind, day: shortDayFormat.format(new Date(iso)).replace('.', ''), time: formatTime(iso) }
+}
