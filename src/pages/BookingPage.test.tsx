@@ -68,7 +68,7 @@ it('asks the customer to pick another time when the slot was just taken', async 
   await user.click(await screen.findByRole('button', { name: '18:00' }))
   await user.click(screen.getByRole('button', { name: /Κλείσε Τρί 13/ }))
 
-  expect(await screen.findByRole('alert')).toHaveTextContent('Μόλις την πήρε κάποιος άλλος')
+  expect(await screen.findByRole('alert')).toHaveTextContent('Αυτή η ώρα μόλις κλείστηκε')
   expect(screen.getByRole('button', { name: /Διάλεξε ώρα/ })).toBeDisabled()
 })
 
@@ -84,7 +84,7 @@ it('shows the free times for the selected day only', async () => {
   api({})
   renderApp('/barbers/1')
 
-  const times = await screen.findByRole('heading', { name: '3 · Ώρα' })
+  const times = await screen.findByRole('heading', { name: 'Τι ώρα;' })
   const section = times.closest('section')!
   expect(await within(section).findAllByRole('button')).toHaveLength(2)
 })

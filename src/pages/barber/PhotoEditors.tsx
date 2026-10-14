@@ -117,7 +117,7 @@ export function WorkPhotosEditor() {
         }}
       />
 
-      <ul className="grid grid-cols-3 gap-2">
+      <ul className="grid grid-cols-2 gap-3">
         {room > 0 && (
           <li>
             <button
@@ -134,8 +134,9 @@ export function WorkPhotosEditor() {
           </li>
         )}
         {photos.data?.map((photo) => (
-          <li key={photo.id} className="relative">
-            <img src={mediaUrl(photo.url)} alt="" loading="lazy" className="aspect-square w-full rounded-xl bg-surface object-cover" />
+          <li key={photo.id} className="relative flex flex-col gap-1.5">
+            <img src={mediaUrl(photo.url)} alt={photo.caption ?? ''} loading="lazy" className="aspect-square w-full rounded-xl bg-surface object-cover" />
+            <CaptionInput photoId={photo.id} initial={photo.caption ?? ''} />
             <button
               type="button"
               aria-label={t('barber.photos.remove')}
@@ -157,5 +158,39 @@ export function WorkPhotosEditor() {
       {remove.isError && <Notice tone="error">{errorMessage(remove.error, t)}</Notice>}
       <p className="text-xs text-muted">{t('barber.photos.consent')}</p>
     </section>
+  )
+}
+
+/** Saves when the field loses focus or Enter is pressed, and only if the text changed. */
+function CaptionInput({ photoId, initial }: { photoId: number; initial: string }) {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  const [value, setValue] = useState(initial)
+  const [saved, setSaved] = useState(initial)
+  const save = useMutation({
+    mutationFn: (caption: string) => barberMeApi.setCaption(photoId, caption),
+    onSuccess: (photo) => {
+      setSaved(photo.caption ?? '')
+      void queryClient.invalidateQueries({ queryKey: ['barber', 'photos'] })
+    },
+  })
+  const commit = () => {
+    if (value.trim() !== saved) save.mutate(value.trim())
+  }
+  return (
+    <input
+      aria-label={t('barber.photos.caption')}
+      placeholder={t('barber.photos.captionPlaceholder')}
+      maxLength={80}
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') e.currentTarget.blur()
+      }}
+      className={`min-h-11 w-full rounded-lg border-2 bg-surface px-3 text-sm text-ink placeholder:text-faint focus:border-accent focus:outline-none ${
+        save.isError ? 'border-danger' : 'border-surface'
+      }`}
+    />
   )
 }

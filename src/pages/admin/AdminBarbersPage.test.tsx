@@ -29,8 +29,8 @@ it('lets an admin approve a pending barber', async () => {
 
   await user.click(screen.getByRole('button', { name: 'Έγκριση' }))
 
-  expect(await screen.findByText(/εγκρίθηκε και εμφανίζεται/)).toBeInTheDocument()
-  expect(await screen.findByText('Κανένας barber δεν περιμένει έγκριση.')).toBeInTheDocument()
+  expect(await screen.findByText('Έγκριση: Barber Nick. Εμφανίζεται πλέον στους πελάτες.')).toBeInTheDocument()
+  expect(await screen.findByText('Δεν υπάρχουν αιτήματα για έγκριση.')).toBeInTheDocument()
   expect(calls.find((c) => c.key === 'PATCH /admin/barbers/2/status')?.body).toEqual({ status: 'APPROVED' })
 })
 
