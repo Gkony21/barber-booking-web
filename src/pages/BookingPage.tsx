@@ -7,6 +7,7 @@ import { appointmentsApi, barbersApi } from '../api/endpoints'
 import type { Appointment, Barber } from '../api/types'
 import { useAuth } from '../auth/AuthContext'
 import { BackLink } from '../components/AppShell'
+import { FadeLines } from '../components/Logo'
 import { Button } from '../components/Button'
 import { ErrorState, Loading, Notice } from '../components/States'
 import { errorMessage } from '../lib/errors'
@@ -216,7 +217,8 @@ function BookingDone({ appointment }: { appointment: Appointment }) {
   const { t } = useTranslation()
   const confirmed = appointment.status === 'CONFIRMED'
   return (
-    <section className="flex flex-col gap-4 rounded-2xl bg-surface p-6" aria-live="polite">
+    <section className="flex flex-col gap-4 overflow-hidden rounded-2xl bg-surface p-6 pt-0" aria-live="polite">
+      <FadeLines className="-mx-6 mb-2" />
       <h2 className={`font-display text-4xl font-extrabold uppercase ${confirmed ? 'text-accent' : ''}`}>
         {confirmed ? t('booking.confirmedTitle') : t('booking.pendingTitle')}
       </h2>

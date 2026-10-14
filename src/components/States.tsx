@@ -1,12 +1,13 @@
 import { useTranslation } from 'react-i18next'
 import { errorMessage } from '../lib/errors'
 import { Button } from './Button'
+import { FadeLines } from './Logo'
 
 export function Loading() {
   const { t } = useTranslation()
   return (
     <div role="status" className="flex justify-center py-16">
-      <span className="size-8 animate-spin rounded-full border-4 border-surface-2 border-t-accent" aria-hidden="true" />
+      <FadeLines animated className="w-12" />
       <span className="sr-only">{t('common.loading')}</span>
     </div>
   )

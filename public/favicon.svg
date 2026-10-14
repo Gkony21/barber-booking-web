@@ -1,9 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" rx="112" fill="#111214"/>
-  <!-- Condensed "F" with a fade cut, drawn as shapes so it needs no font. -->
-  <rect x="168" y="112" width="64" height="288" fill="#E8B04B"/>
-  <rect x="168" y="112" width="184" height="60" fill="#E8B04B"/>
-  <rect x="168" y="228" width="140" height="56" fill="#E8B04B"/>
-  <rect x="168" y="356" width="64" height="14" fill="#111214"/>
-  <rect x="168" y="330" width="64" height="8" fill="#111214"/>
+  <!-- The "F" of the FADE logo: solid on top, thinning lines below like a skin fade. -->
+  <defs>
+    <mask id="fade" maskUnits="userSpaceOnUse" x="0" y="0" width="56" height="100">
+      <rect x="0" y="0" width="56" height="56" fill="#fff"/>
+      <rect x="0" y="60" width="56" height="8" fill="#fff"/>
+      <rect x="0" y="73" width="56" height="6" fill="#fff"/>
+      <rect x="0" y="84" width="56" height="4" fill="#fff"/>
+      <rect x="0" y="94" width="56" height="2" fill="#fff"/>
+    </mask>
+  </defs>
+  <path transform="translate(168 96) scale(3.2)" mask="url(#fade)" fill="#E8B04B" d="M0 0H56V20H22V40H46V58H22V100H0Z"/>
 </svg>

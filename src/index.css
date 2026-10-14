@@ -43,3 +43,9 @@
     outline-offset: 2px;
   }
 }
+
+/* Loading: the fade lines light up top to bottom. Only runs when motion is allowed. */
+@keyframes fade-line {
+  0%, 100% { opacity: 0.25; }
+  40% { opacity: 1; }
+}

@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
+import { Logo } from './Logo'
 
 export function AppShell() {
   const { t } = useTranslation()
@@ -9,8 +10,8 @@ export function AppShell() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col">
       <header className="flex items-center justify-between px-5 pt-5 pb-2">
-        <Link to="/" className="font-display text-2xl font-extrabold tracking-[0.2em] text-ink no-underline">
-          {t('app.name')}
+        <Link to="/" aria-label={t('nav.home')} className="flex min-h-11 items-center text-accent">
+          <Logo height={30} label={t('app.name')} />
         </Link>
         {session ? (
           <button onClick={logout} className="min-h-11 px-2 text-sm text-muted hover:text-ink">
