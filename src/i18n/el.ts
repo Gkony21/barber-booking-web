@@ -5,6 +5,7 @@ const el = {
     tagline: 'Κλείσε ραντεβού με τον barber σου σε δευτερόλεπτα.',
   },
   nav: {
+    home: 'FADE — αρχική',
     barbers: 'Barbers',
     appointments: 'Ραντεβού',
     login: 'Σύνδεση',
