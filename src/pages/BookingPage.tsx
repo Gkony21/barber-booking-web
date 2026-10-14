@@ -2,19 +2,20 @@ import { useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { ApiError } from '../api/client'
+import { ApiError, mediaUrl } from '../api/client'
 import { appointmentsApi, barbersApi } from '../api/endpoints'
 import type { Appointment, Barber } from '../api/types'
 import { useAuth } from '../auth/AuthContext'
 import { BackLink } from '../components/AppShell'
 import { Avatar } from '../components/Avatar'
 import { Gallery } from '../components/Gallery'
+import { BookingTicket } from '../components/BookingTicket'
 import { FadeLines } from '../components/Logo'
 import { Button } from '../components/Button'
 import { DayPicker } from '../components/DayPicker'
 import { ErrorState, Loading, Notice } from '../components/States'
 import { errorMessage } from '../lib/errors'
-import { bookableDays, formatAppointmentTime, formatPrice } from '../lib/format'
+import { bookableDays, formatPrice } from '../lib/format'
 
 export function BookingPage() {
   const { t } = useTranslation()
@@ -29,12 +30,10 @@ export function BookingPage() {
   if (services.isError) return <ErrorState error={services.error} onRetry={() => services.refetch()} />
 
   return (
-    <div className="flex flex-col gap-7">
-      <div className="pt-2">
-        <BackLink to="/" label={t('nav.back')} />
-      </div>
-      <BarberHeader barber={barber.data} />
-      {photos.data && <Gallery title={t('booking.gallery')} photos={photos.data} />}
+    <div className="flex flex-col gap-6">
+      <BarberHero barber={barber.data} />
+      <BarberAbout barber={barber.data} />
+      {photos.data && <Gallery layout="strip" title={t('booking.gallery')} photos={photos.data} />}
       {services.data.length === 0 ? (
         <p className="text-muted">{t('booking.noServices')}</p>
       ) : (
@@ -44,26 +43,50 @@ export function BookingPage() {
   )
 }
 
-function BarberHeader({ barber }: { barber: Barber }) {
+/** Full-width cover (latest work photo) with the barber's photo and name over its bottom edge. */
+function BarberHero({ barber }: { barber: Barber }) {
   const { t } = useTranslation()
-  const place = [barber.shopName, barber.address ?? barber.city].filter(Boolean).join(' · ')
   return (
-    <section className="flex flex-col gap-1.5">
-      <div className="flex items-end gap-4">
-        {barber.avatarUrl && <Avatar name={barber.name} url={barber.avatarUrl} size={72} />}
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <p className="text-sm font-semibold tracking-wider text-accent uppercase">{t('booking.eyebrow')}</p>
-          <h1 className="font-display text-5xl leading-none font-extrabold break-words uppercase">{barber.name}</h1>
+    <section className="relative -mx-5 -mt-2 mb-9 h-[260px] bg-surface-2">
+      {barber.coverUrl ? (
+        <img src={mediaUrl(barber.coverUrl)} alt="" className="size-full object-cover" />
+      ) : (
+        <div className="flex size-full items-center justify-center bg-gradient-to-b from-surface-2 to-ground">
+          <FadeLines className="w-28 opacity-30" />
+        </div>
+      )}
+      <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-ground to-transparent" />
+      <div className="absolute top-3 left-5">
+        <BackLink to="/" label={t('nav.back')} />
+      </div>
+      <div className="absolute inset-x-5 -bottom-9 flex items-end gap-3.5">
+        <span className="rounded-[22px] border-4 border-ground">
+          <Avatar name={barber.name} url={barber.avatarUrl} size={80} />
+        </span>
+        <div className="flex min-w-0 flex-col gap-0.5 pb-1.5">
+          <span className="text-[13px] font-semibold text-accent">{t('booking.eyebrow')}</span>
+          <h1 className="font-display text-[40px] leading-[0.95] font-extrabold break-words uppercase">{barber.name}</h1>
         </div>
       </div>
-      {place && <p className="flex items-center gap-1.5 text-sm text-muted">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" />
-          <circle cx="12" cy="10" r="2.5" />
-        </svg>
-        {place}
-      </p>}
-      {barber.bio && <p className="pt-1 text-muted">{barber.bio}</p>}
+    </section>
+  )
+}
+
+function BarberAbout({ barber }: { barber: Barber }) {
+  const place = [barber.shopName, barber.address, barber.city].filter(Boolean).join(', ')
+  if (!place && !barber.bio) return null
+  return (
+    <section className="flex flex-col gap-2">
+      {place && (
+        <p className="flex items-center gap-1.5 text-sm text-muted">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" />
+            <circle cx="12" cy="10" r="2.5" />
+          </svg>
+          {place}
+        </p>
+      )}
+      {barber.bio && <p className="text-[15px] leading-relaxed text-ink/85">{barber.bio}</p>}
     </section>
   )
 }
@@ -102,7 +125,7 @@ function BookingForm({ barber, services }: { barber: Barber; services: { id: num
     },
   })
 
-  if (booked) return <BookingDone appointment={booked} />
+  if (booked) return <BookingTicket appointment={booked} barber={barber} />
 
   const choose = (change: () => void) => {
     change()
@@ -112,8 +135,9 @@ function BookingForm({ barber, services }: { barber: Barber; services: { id: num
 
   return (
     <>
-      <section className="flex flex-col gap-2.5">
-        <StepTitle>{t('booking.stepService')}</StepTitle>
+      {/* Read like the price board on a barbershop wall: name, dotted leader, price. */}
+      <section className="flex flex-col gap-1">
+        <h2 className="mb-2 font-display text-[26px] font-extrabold uppercase">{t('booking.stepService')}</h2>
         {services.map((s) => {
           const selected = s.id === serviceId
           return (
@@ -121,13 +145,15 @@ function BookingForm({ barber, services }: { barber: Barber; services: { id: num
               key={s.id}
               aria-pressed={selected}
               onClick={() => choose(() => setServiceId(s.id))}
-              className={`flex min-h-16 items-center gap-3 rounded-2xl border-2 bg-surface px-4 py-3 text-left ${selected ? 'border-accent' : 'border-surface'}`}
+              className={`flex min-h-14 flex-col gap-0.5 py-3 text-left ${selected ? 'text-accent' : 'text-ink'}`}
             >
-              <span className="flex flex-1 flex-col gap-0.5">
-                <span className="font-semibold">{s.name}</span>
-                <span className="text-sm text-muted">{t('common.minutes', { count: s.durationMinutes })}</span>
+              <span className="flex w-full items-baseline gap-2">
+                <span aria-hidden="true" className={`size-2 shrink-0 self-center rounded-full ${selected ? 'bg-accent' : 'bg-transparent'}`} />
+                <span className="text-[17px] font-semibold">{s.name}</span>
+                <span aria-hidden="true" className="min-w-6 flex-1 -translate-y-1 border-b-2 border-dotted border-line" />
+                <span className="font-display text-[22px] font-extrabold">{formatPrice(s.price)}</span>
               </span>
-              <span className={`font-display text-2xl font-extrabold ${selected ? 'text-accent' : ''}`}>{formatPrice(s.price)}</span>
+              <span className="pl-4 text-[13px] text-muted">{t('common.minutes', { count: s.durationMinutes })}</span>
             </button>
           )
         })}
@@ -145,7 +171,7 @@ function BookingForm({ barber, services }: { barber: Barber; services: { id: num
         {availability.isPending && <Loading />}
         {availability.isError && <ErrorState error={availability.error} onRetry={() => availability.refetch()} />}
         {availability.data?.startTimes.length === 0 && <p className="py-4 text-muted">{t('booking.noTimes')}</p>}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           {availability.data?.startTimes.map((slot) => {
             const selected = slot === time
             return (
@@ -209,28 +235,6 @@ function BookingForm({ barber, services }: { barber: Barber; services: { id: num
   )
 }
 
-function BookingDone({ appointment }: { appointment: Appointment }) {
-  const { t } = useTranslation()
-  const confirmed = appointment.status === 'CONFIRMED'
-  return (
-    <section className="flex flex-col gap-4 overflow-hidden rounded-2xl bg-surface p-6 pt-0" aria-live="polite">
-      <FadeLines className="-mx-6 mb-2" />
-      <h2 className={`font-display text-4xl font-extrabold uppercase ${confirmed ? 'text-accent' : ''}`}>
-        {confirmed ? t('booking.confirmedTitle') : t('booking.pendingTitle')}
-      </h2>
-      <p className="text-muted">
-        {confirmed ? t('booking.confirmedBody', { when: formatAppointmentTime(appointment.startTime) }) : t('booking.pendingBody')}
-      </p>
-      <p className="font-semibold">
-        {appointment.serviceName} · {formatPrice(appointment.price)}
-      </p>
-      <Link to="/appointments" className="flex min-h-12 items-center justify-center rounded-2xl bg-accent font-semibold text-ground">
-        {t('booking.seeAppointments')}
-      </Link>
-    </section>
-  )
-}
-
 function StepTitle({ children }: { children: React.ReactNode }) {
-  return <h2 className="font-display text-lg font-semibold tracking-wide uppercase">{children}</h2>
+  return <h2 className="font-display text-xl font-extrabold uppercase">{children}</h2>
 }

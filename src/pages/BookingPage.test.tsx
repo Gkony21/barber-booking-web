@@ -47,13 +47,16 @@ it('books the chosen service, day and time', async () => {
   const user = userEvent.setup()
 
   expect(await screen.findByRole('heading', { name: 'Barber Nick' })).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: /Κούρεμα\s*30 λεπτά/ })).toHaveAttribute('aria-pressed', 'true')
+  expect(screen.getByRole('button', { name: /Κούρεμα.*12,00.*30 λεπτά/ })).toHaveAttribute('aria-pressed', 'true')
 
   await user.click(await screen.findByRole('button', { name: '18:00' }))
   await user.click(screen.getByRole('button', { name: /Κλείσε Τρί 13 · 18:00/ }))
 
-  expect(await screen.findByRole('heading', { name: 'Κλείστηκε!' })).toBeInTheDocument()
-  expect(screen.getByText(/Τρίτη 13 Οκτωβρίου στις 18:00/)).toBeInTheDocument()
+  expect(await screen.findByText('Κλείστηκε')).toBeInTheDocument()
+  expect(screen.getByText('18:00')).toBeInTheDocument()
+  expect(screen.getByText('Τρίτη 13 Οκτωβρίου')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Στο ημερολόγιο' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Οδηγίες' })).toHaveAttribute('href', expect.stringContaining('google.com/maps'))
   expect(calls.find((c) => c.key === 'POST /appointments')?.body).toEqual({
     barberId: 1, serviceId: 7, startTime: '2026-10-13T18:00',
   })

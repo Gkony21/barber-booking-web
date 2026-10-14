@@ -29,7 +29,13 @@ export const authApi = {
 }
 
 export const barbersApi = {
-  list: (city?: string) => api<Barber[]>(`/barbers${city ? `?city=${encodeURIComponent(city)}` : ''}`),
+  list: (filters: { city?: string; availableToday?: boolean } = {}) => {
+    const params = new URLSearchParams()
+    if (filters.city) params.set('city', filters.city)
+    if (filters.availableToday) params.set('availableToday', 'true')
+    const query = params.toString()
+    return api<Barber[]>(`/barbers${query ? `?${query}` : ''}`)
+  },
   get: (id: number) => api<Barber>(`/barbers/${id}`),
   services: (id: number) => api<ServiceOffering[]>(`/barbers/${id}/services`),
   photos: (id: number) => api<Photo[]>(`/barbers/${id}/photos`),

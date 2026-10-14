@@ -49,3 +49,9 @@
   0%, 100% { opacity: 0.25; }
   40% { opacity: 1; }
 }
+
+/* Booking confirmation: the fade lines draw in from the left, once. */
+@keyframes ticket-line {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}

@@ -4,13 +4,46 @@ import { mediaUrl } from '../api/client'
 import type { Photo } from '../api/types'
 
 const PREVIEW = 6
+const STRIP = 5
 
-/** A grid of a barber's work; tapping a photo opens it full screen. */
-export function Gallery({ title, photos }: { title: string; photos: Photo[] }) {
+/**
+ * A barber's work; tapping a photo opens it full screen. "grid" shows rows of three,
+ * "strip" a single row of thumbnails whose last one counts the rest.
+ */
+export function Gallery({ title, photos, layout = 'grid' }: { title?: string; photos: Photo[]; layout?: 'grid' | 'strip' }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState<number | null>(null)
   const [showAll, setShowAll] = useState(false)
   if (photos.length === 0) return null
+
+  if (layout === 'strip') {
+    const shown = photos.slice(0, STRIP)
+    const rest = photos.length - shown.length
+    return (
+      <section className="-mx-5 flex gap-2 overflow-x-auto px-5 [scrollbar-width:none]" aria-label={title}>
+        {shown.map((photo, index) => {
+          const isLastWithMore = rest > 0 && index === shown.length - 1
+          return (
+            <button
+              key={photo.id}
+              type="button"
+              aria-label={[t('booking.photoOf', { index: index + 1, total: photos.length }), photo.caption].filter(Boolean).join(': ')}
+              onClick={() => setOpen(index)}
+              className="relative size-[86px] shrink-0 overflow-hidden rounded-[14px] bg-surface"
+            >
+              <img src={mediaUrl(photo.url)} alt="" loading="lazy" className="size-full object-cover" />
+              {isLastWithMore && (
+                <span className="absolute inset-0 flex items-center justify-center bg-ground/65 font-display text-xl font-extrabold">
+                  +{rest + 1}
+                </span>
+              )}
+            </button>
+          )
+        })}
+        {open !== null && <Lightbox photos={photos} index={open} onChange={setOpen} onClose={() => setOpen(null)} />}
+      </section>
+    )
+  }
 
   const visible = showAll ? photos : photos.slice(0, PREVIEW)
 
