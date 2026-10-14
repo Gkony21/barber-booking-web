@@ -58,3 +58,36 @@ it('stops offering uploads at 20 photos', async () => {
   expect(await screen.findByText(/Έφτασες τις 20 φωτογραφίες/)).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: /Προσθήκη φωτογραφιών/ })).not.toBeInTheDocument()
 })
+
+it('saves a caption when the field loses focus', async () => {
+  logInAs('thanos@test.gr', 'BARBER')
+  const calls = mockApi({
+    'GET /barbers/me': () => ({ json: barber }),
+    'GET /barbers/me/photos': () => ({ json: [{ id: 7, url: '/media/a.jpg', caption: null }] }),
+    'PATCH /barbers/me/photos/7': (body) => ({ json: { id: 7, url: '/media/a.jpg', ...(body as object) } }),
+  })
+  renderApp('/barber/profile')
+  const user = userEvent.setup()
+
+  await user.type(await screen.findByLabelText('Λεζάντα'), 'Skin fade #0{Enter}')
+
+  await vi.waitFor(() => expect(calls.some((c) => c.key === 'PATCH /barbers/me/photos/7')).toBe(true))
+  expect(calls.find((c) => c.key === 'PATCH /barbers/me/photos/7')?.body).toEqual({ caption: 'Skin fade #0' })
+})
+
+it('lets the barber choose 15- or 30-minute starts', async () => {
+  logInAs('thanos@test.gr', 'BARBER')
+  const calls = mockApi({
+    'GET /barbers/me': () => ({ json: { ...barber, slotStepMinutes: 30 } }),
+    'GET /barbers/me/photos': () => ({ json: [] }),
+    'PUT /barbers/me': (body) => ({ json: { ...barber, ...(body as object) } }),
+  })
+  renderApp('/barber/profile')
+  const user = userEvent.setup()
+
+  expect(await screen.findByRole('radio', { name: '30 λεπτά' })).toBeChecked()
+  await user.click(screen.getByRole('radio', { name: '15 λεπτά' }))
+  await user.click(screen.getByRole('button', { name: 'Αποθήκευση' }))
+
+  await vi.waitFor(() => expect(calls.find((c) => c.key === 'PUT /barbers/me')?.body).toMatchObject({ slotStepMinutes: 15 }))
+})

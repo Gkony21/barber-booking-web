@@ -62,7 +62,7 @@ export function BarbersPage() {
 
 function BarberCard({ barber }: { barber: Barber }) {
   const { t } = useTranslation()
-  const place = [barber.shopName ?? t('barbers.independent'), barber.city].filter(Boolean).join(' · ')
+  const place = [barber.shopName, barber.city].filter(Boolean).join(' · ')
   return (
     <Link
       to={`/barbers/${barber.id}`}

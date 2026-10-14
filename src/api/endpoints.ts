@@ -67,6 +67,8 @@ export const barberMeApi = {
   photos: () => api<Photo[]>('/barbers/me/photos'),
   addPhoto: (image: Blob) => api<Photo>('/barbers/me/photos', { method: 'POST', body: fileForm(image) }),
   deletePhoto: (id: number) => api<void>(`/barbers/me/photos/${id}`, { method: 'DELETE' }),
+  setCaption: (id: number, caption: string) =>
+    api<Photo>(`/barbers/me/photos/${id}`, { method: 'PATCH', body: { caption } }),
 
   timeOff: () => api<TimeOff[]>('/barbers/me/time-off'),
   addTimeOff: (body: { startDate: string; endDate: string; reason: string | null }) =>

@@ -22,12 +22,13 @@ export function Gallery({ title, photos }: { title: string; photos: Photo[] }) {
           <li key={photo.id}>
             <button
               type="button"
-              aria-label={t('booking.photoOf', { index: index + 1, total: photos.length })}
+              aria-label={[t('booking.photoOf', { index: index + 1, total: photos.length }), photo.caption].filter(Boolean).join(': ')}
               onClick={() => setOpen(index)}
               className="block w-full overflow-hidden rounded-xl"
             >
               <img src={mediaUrl(photo.url)} alt="" loading="lazy" className="aspect-square w-full bg-surface object-cover" />
             </button>
+            {photo.caption && <p className="mt-1 truncate text-xs text-muted">{photo.caption}</p>}
           </li>
         ))}
       </ul>
@@ -90,9 +91,10 @@ function Lightbox({
           </svg>
         </button>
       </div>
-      <div className="flex min-h-0 flex-1 items-center justify-center px-4" onClick={(e) => e.stopPropagation()}>
-        <img src={mediaUrl(photos[index].url)} alt="" className="max-h-full max-w-full rounded-2xl object-contain" />
-      </div>
+      <figure className="m-0 flex min-h-0 flex-1 flex-col items-center justify-center gap-3 px-4" onClick={(e) => e.stopPropagation()}>
+        <img src={mediaUrl(photos[index].url)} alt={photos[index].caption ?? ''} className="min-h-0 max-w-full flex-1 rounded-2xl object-contain" />
+        {photos[index].caption && <figcaption className="text-center text-ink">{photos[index].caption}</figcaption>}
+      </figure>
       {photos.length > 1 && (
         <div className="flex justify-center gap-3 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]" onClick={(e) => e.stopPropagation()}>
           <NavButton label={t('booking.previous')} onClick={previous} d="M15 18l-6-6 6-6" />

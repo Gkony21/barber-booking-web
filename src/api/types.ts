@@ -15,6 +15,7 @@ export interface Barber {
   city: string | null
   status: 'PENDING' | 'APPROVED' | 'SUSPENDED'
   autoConfirmBookings: boolean
+  slotStepMinutes: 15 | 30
   shopId: number | null
   shopName: string | null
 }
@@ -87,6 +88,7 @@ export interface BarberProfileInput {
   latitude: number | null
   longitude: number | null
   autoConfirmBookings: boolean
+  slotStepMinutes: 15 | 30
 }
 
 export interface ServiceInput {
@@ -117,4 +119,5 @@ export interface AdminBarber {
 export interface Photo {
   id: number
   url: string
+  caption: string | null
 }

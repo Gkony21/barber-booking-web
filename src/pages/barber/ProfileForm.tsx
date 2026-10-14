@@ -19,6 +19,7 @@ export function ProfileForm({ barber }: { barber: Barber | null }) {
     address: barber?.address ?? '',
     city: barber?.city ?? '',
     autoConfirmBookings: barber?.autoConfirmBookings ?? true,
+    slotStepMinutes: barber?.slotStepMinutes ?? 30,
   })
   const [saved, setSaved] = useState(false)
 
@@ -33,6 +34,7 @@ export function ProfileForm({ barber }: { barber: Barber | null }) {
         latitude: null,
         longitude: null,
         autoConfirmBookings: form.autoConfirmBookings,
+        slotStepMinutes: form.slotStepMinutes,
       }
       return barber ? barberMeApi.updateProfile(body) : barberMeApi.createProfile(body)
     },
@@ -98,6 +100,34 @@ export function ProfileForm({ barber }: { barber: Barber | null }) {
           </span>
         </span>
       </label>
+
+      <fieldset className="flex flex-col gap-2 rounded-xl bg-surface p-4">
+        <legend className="contents font-semibold">{t('barber.profile.slotStep')}</legend>
+        <div role="radiogroup" className="flex gap-1 rounded-xl bg-surface-2 p-1">
+          {([15, 30] as const).map((minutes) => (
+            <label
+              key={minutes}
+              className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-lg text-sm font-semibold ${
+                form.slotStepMinutes === minutes ? 'bg-accent text-ground' : 'text-muted'
+              }`}
+            >
+              <input
+                type="radio"
+                name="slotStep"
+                value={minutes}
+                checked={form.slotStepMinutes === minutes}
+                onChange={() => {
+                  setSaved(false)
+                  setForm({ ...form, slotStepMinutes: minutes })
+                }}
+                className="sr-only"
+              />
+              {t('barber.profile.minutes', { count: minutes })}
+            </label>
+          ))}
+        </div>
+        <span className="text-sm text-muted">{t('barber.profile.slotStepHint')}</span>
+      </fieldset>
 
       {save.isError && <Notice tone="error">{errorMessage(save.error, t)}</Notice>}
       {saved && <Notice tone="success">{t('barber.setupDone')}</Notice>}
