@@ -1,9 +1,11 @@
 import { api } from './client'
 import type {
+  AdminBarber,
   Appointment,
   Availability,
   Barber,
   BarberProfileInput,
+  BarberStatus,
   Role,
   ServiceInput,
   ServiceOffering,
@@ -62,4 +64,10 @@ export const barberMeApi = {
   addTimeOff: (body: { startDate: string; endDate: string; reason: string | null }) =>
     api<TimeOff>('/barbers/me/time-off', { method: 'POST', body }),
   deleteTimeOff: (id: number) => api<void>(`/barbers/me/time-off/${id}`, { method: 'DELETE' }),
+}
+
+export const adminApi = {
+  barbers: (status: BarberStatus) => api<AdminBarber[]>(`/admin/barbers?status=${status}`),
+  setStatus: (id: number, status: BarberStatus) =>
+    api<AdminBarber>(`/admin/barbers/${id}/status`, { method: 'PATCH', body: { status } }),
 }

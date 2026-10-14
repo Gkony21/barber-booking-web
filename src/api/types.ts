@@ -94,3 +94,20 @@ export interface ServiceInput {
   durationMinutes: number
   price: number
 }
+
+export type BarberStatus = 'PENDING' | 'APPROVED' | 'SUSPENDED'
+
+/** A barber as an admin sees them, with contact details. */
+export interface AdminBarber {
+  id: number
+  userId: number
+  name: string
+  email: string
+  phoneNumber: string | null
+  specialty: string | null
+  address: string | null
+  city: string | null
+  shopName: string | null
+  status: BarberStatus
+  createdAt: string
+}

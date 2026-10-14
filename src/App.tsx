@@ -10,6 +10,7 @@ import { MyAppointmentsPage } from './pages/MyAppointmentsPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { VerifyEmailPage } from './pages/VerifyEmailPage'
+import { AdminBarbersPage } from './pages/admin/AdminBarbersPage'
 import { BarberHoursPage } from './pages/barber/BarberHoursPage'
 import { BarberProfilePage } from './pages/barber/BarberProfilePage'
 import { BarberSchedulePage } from './pages/barber/BarberSchedulePage'
@@ -33,6 +34,7 @@ export function App() {
         <Route path="barber/services" element={<RequireAuth role="BARBER"><BarberServicesPage /></RequireAuth>} />
         <Route path="barber/hours" element={<RequireAuth role="BARBER"><BarberHoursPage /></RequireAuth>} />
         <Route path="barber/profile" element={<RequireAuth role="BARBER"><BarberProfilePage /></RequireAuth>} />
+        <Route path="admin" element={<RequireAuth role="ADMIN"><AdminBarbersPage /></RequireAuth>} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
         <Route path="check-email" element={<CheckEmailPage />} />
@@ -43,8 +45,10 @@ export function App() {
   )
 }
 
-/** Barbers land on their schedule; everyone else on the barber list. */
+/** Barbers land on their schedule, admins on approvals; everyone else on the barber list. */
 function Home() {
   const { session } = useAuth()
-  return session?.role === 'BARBER' ? <Navigate to="/barber" replace /> : <BarbersPage />
+  if (session?.role === 'BARBER') return <Navigate to="/barber" replace />
+  if (session?.role === 'ADMIN') return <Navigate to="/admin" replace />
+  return <BarbersPage />
 }
