@@ -8,6 +8,7 @@ import { Button } from '../../components/Button'
 import { ErrorState, Loading, Notice } from '../../components/States'
 import { errorMessage } from '../../lib/errors'
 import { athensDate, bookableDays, formatDayHeading, formatPrice, formatTime } from '../../lib/format'
+import { NewAppointmentForm } from './NewAppointmentForm'
 import { ProfileForm } from './ProfileForm'
 import { useMyBarber } from './useMyBarber'
 
@@ -36,6 +37,8 @@ export function BarberSchedulePage() {
 function Schedule({ barber }: { barber: Barber }) {
   const { t } = useTranslation()
   const [days] = useState(() => bookableDays())
+  const [adding, setAdding] = useState(false)
+  const [justSaved, setJustSaved] = useState(false)
   const from = days[0].iso
   const to = days[days.length - 1].iso
 
@@ -83,6 +86,25 @@ function Schedule({ barber }: { barber: Barber }) {
           )}
         </section>
       )}
+
+      {adding ? (
+        <NewAppointmentForm
+          onDone={(saved) => {
+            setAdding(false)
+            setJustSaved(saved)
+          }}
+        />
+      ) : (
+        <Button
+          onClick={() => {
+            setAdding(true)
+            setJustSaved(false)
+          }}
+        >
+          {t('barber.schedule.add')}
+        </Button>
+      )}
+      {justSaved && <Notice tone="success">{t('barber.schedule.saved')}</Notice>}
 
       {appointments.isPending && <Loading />}
       {appointments.isError && <ErrorState error={appointments.error} onRetry={() => appointments.refetch()} />}
@@ -137,7 +159,14 @@ function AppointmentRow({ appointment, dayLabel }: { appointment: Appointment; d
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           {dayLabel && <span className="text-sm font-semibold text-accent first-letter:uppercase">{dayLabel}</span>}
-          <span className="truncate font-semibold">{appointment.customerName}</span>
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="truncate font-semibold">{appointment.customerName}</span>
+            {appointment.manual && (
+              <span className="shrink-0 rounded-md bg-surface-2 px-1.5 py-0.5 text-[11px] font-semibold text-muted">
+                {t('barber.schedule.manualBadge')}
+              </span>
+            )}
+          </span>
           <span className="text-sm text-muted">
             {appointment.serviceName} · {formatPrice(appointment.price)}
           </span>

@@ -106,7 +106,7 @@ function BarberCard({ barber }: { barber: Barber }) {
         : t('barbers.freeLater', { day: next.day, time: next.time }))
 
   return (
-    <Link to={`/barbers/${barber.id}`} className="block overflow-hidden rounded-[22px] bg-surface transition-colors hover:bg-surface-2">
+    <Link to={barber.slug ? `/${barber.slug}` : `/barbers/${barber.id}`} className="block overflow-hidden rounded-[22px] bg-surface transition-colors hover:bg-surface-2">
       <div className="relative h-48 bg-surface-2">
         {barber.coverUrl ? (
           <img src={mediaUrl(barber.coverUrl)} alt="" loading="lazy" className="size-full object-cover" />
