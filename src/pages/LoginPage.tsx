@@ -6,6 +6,7 @@ import { authApi } from '../api/endpoints'
 import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/Button'
 import { Notice } from '../components/States'
+import { PasswordField } from '../components/PasswordField'
 import { TextField } from '../components/TextField'
 import { errorMessage } from '../lib/errors'
 import { safeNext } from '../lib/navigation'
@@ -59,7 +60,10 @@ export function LoginPage() {
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
         <TextField label={t('auth.email')} type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-        <TextField label={t('auth.password')} type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+        <PasswordField label={t('auth.password')} autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+        <Link to="/forgot-password" className="-mt-2 flex min-h-11 items-center self-end text-sm font-semibold text-accent">
+          {t('auth.forgotLink')}
+        </Link>
 
         {error && <Notice tone="error">{error}</Notice>}
         {unverified && !resent && (

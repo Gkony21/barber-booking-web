@@ -23,6 +23,9 @@ export const authApi = {
   verifyEmail: (token: string) => api<void>('/auth/verify-email', { method: 'POST', body: { token } }),
   resendVerification: (email: string) =>
     api<void>('/auth/resend-verification', { method: 'POST', body: { email } }),
+  forgotPassword: (email: string) => api<void>('/auth/forgot-password', { method: 'POST', body: { email } }),
+  resetPassword: (token: string, password: string) =>
+    api<void>('/auth/reset-password', { method: 'POST', body: { token, password } }),
 }
 
 export const barbersApi = {
