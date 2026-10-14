@@ -5,6 +5,7 @@ import { ApiError } from '../api/client'
 import { authApi } from '../api/endpoints'
 import { Button } from '../components/Button'
 import { Notice } from '../components/States'
+import { PasswordField } from '../components/PasswordField'
 import { TextField } from '../components/TextField'
 import { errorMessage } from '../lib/errors'
 
@@ -12,6 +13,7 @@ export function RegisterPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [form, setForm] = useState({ name: '', email: '', phoneNumber: '', password: '' })
+  const [confirm, setConfirm] = useState('')
   const [isBarber, setIsBarber] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -20,6 +22,8 @@ export function RegisterPage() {
     setForm({ ...form, [field]: e.target.value })
 
   const passwordTooShort = form.password.length > 0 && form.password.length < 8
+  // Shown once the second field is filled in, not while it is still being typed from scratch.
+  const passwordsDiffer = confirm.length > 0 && confirm !== form.password
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
@@ -47,15 +51,22 @@ export function RegisterPage() {
         <TextField label={t('auth.name')} autoComplete="name" required value={form.name} onChange={update('name')} />
         <TextField label={t('auth.email')} type="email" autoComplete="email" required value={form.email} onChange={update('email')} />
         <TextField label={t('auth.phone')} type="tel" autoComplete="tel" value={form.phoneNumber} onChange={update('phoneNumber')} />
-        <TextField
+        <PasswordField
           label={t('auth.password')}
-          type="password"
           autoComplete="new-password"
           required
           value={form.password}
           onChange={update('password')}
           hint={t('auth.passwordHint')}
-          error={passwordTooShort ? t('auth.passwordHint') : undefined}
+          error={passwordTooShort ? t('auth.passwordTooShort') : undefined}
+        />
+        <PasswordField
+          label={t('auth.confirmPassword')}
+          autoComplete="new-password"
+          required
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          error={passwordsDiffer ? t('auth.passwordsDiffer') : undefined}
         />
 
         <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl bg-surface px-4">
@@ -65,7 +76,7 @@ export function RegisterPage() {
 
         {error && <Notice tone="error">{error}</Notice>}
 
-        <Button type="submit" disabled={submitting || !form.name || !form.email || form.password.length < 8}>
+        <Button type="submit" disabled={submitting || !form.name || !form.email || form.password.length < 8 || confirm !== form.password}>
           {t('auth.registerButton')}
         </Button>
       </form>
