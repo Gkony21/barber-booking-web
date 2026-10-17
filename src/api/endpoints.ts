@@ -82,7 +82,9 @@ export const barberMeApi = {
   createService: (body: ServiceInput) => api<ServiceOffering>('/barbers/me/services', { method: 'POST', body }),
   updateService: (id: number, body: ServiceInput) =>
     api<ServiceOffering>(`/barbers/me/services/${id}`, { method: 'PUT', body }),
-  deactivateService: (id: number) => api<void>(`/barbers/me/services/${id}`, { method: 'DELETE' }),
+  hideService: (id: number) => api<void>(`/barbers/me/services/${id}/hide`, { method: 'POST' }),
+  /** Gone for good; appointments already booked keep their details. */
+  deleteService: (id: number) => api<void>(`/barbers/me/services/${id}`, { method: 'DELETE' }),
 
   workingHours: () => api<WorkingHours[]>('/barbers/me/working-hours'),
   saveWorkingHours: (body: WorkingHours[]) =>

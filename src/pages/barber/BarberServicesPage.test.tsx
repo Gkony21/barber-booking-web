@@ -24,6 +24,8 @@ it('splits main services from extras and suggests what to add', async () => {
 
   await user.click(screen.getByRole('button', { name: '+ Έξτρα' }))
   expect(screen.getByPlaceholderText('π.χ. Λούσιμο')).toBeInTheDocument()
+  // The section decides the kind; the form has no main/extra switch.
+  expect(screen.queryByRole('radio')).not.toBeInTheDocument()
   await user.type(screen.getByLabelText('Όνομα'), 'Σχέδια')
   await user.type(screen.getByLabelText('Τιμή (€)'), '5')
   await user.click(screen.getByRole('button', { name: 'Αποθήκευση' }))
@@ -31,4 +33,25 @@ it('splits main services from extras and suggests what to add', async () => {
   await vi.waitFor(() =>
     expect(calls.find((c) => c.key === 'POST /barbers/me/services')?.body).toMatchObject({ name: 'Σχέδια', price: 5, kind: 'EXTRA' }),
   )
+})
+
+it('hides a service for now or deletes it for good', async () => {
+  logInAs('nikos@test.gr', 'BARBER')
+  vi.spyOn(window, 'confirm').mockReturnValue(true)
+  const calls = mockApi({
+    'GET /barbers/me/services': () => ({ json: [haircut, wash] }),
+    'POST /barbers/me/services/1/hide': () => ({ status: 204 }),
+    'DELETE /barbers/me/services/2': () => ({ status: 204 }),
+  })
+  renderApp('/barber/services')
+  const user = userEvent.setup()
+
+  await user.click((await screen.findAllByRole('button', { name: 'Απόκρυψη' }))[0])
+  await user.click(screen.getAllByRole('button', { name: 'Διαγραφή' })[1])
+
+  await vi.waitFor(() => {
+    expect(calls.some((c) => c.key === 'POST /barbers/me/services/1/hide')).toBe(true)
+    expect(calls.some((c) => c.key === 'DELETE /barbers/me/services/2')).toBe(true)
+  })
+  expect(window.confirm).toHaveBeenLastCalledWith(expect.stringContaining('Οριστική διαγραφή'))
 })
