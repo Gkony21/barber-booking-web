@@ -92,7 +92,8 @@ function ServiceRow({ service, onEdit }: { service: ServiceOffering; onEdit: () 
   const queryClient = useQueryClient()
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['barber', 'services'] })
 
-  const deactivate = useMutation({ mutationFn: () => barberMeApi.deactivateService(service.id), onSuccess: refresh })
+  const deactivate = useMutation({ mutationFn: () => barberMeApi.hideService(service.id), onSuccess: refresh })
+  const remove = useMutation({ mutationFn: () => barberMeApi.deleteService(service.id), onSuccess: refresh })
   // Saving a service makes it visible again, so "restore" re-sends its current details.
   const reactivate = useMutation({
     mutationFn: () =>
@@ -119,7 +120,17 @@ function ServiceRow({ service, onEdit }: { service: ServiceOffering; onEdit: () 
         </div>
         <span className="font-display text-2xl font-extrabold">{formatServicePrice(service.price, t)}</span>
       </div>
+      {remove.isError && <Notice tone="error">{errorMessage(remove.error, t)}</Notice>}
       <div className="flex justify-end gap-2">
+        {/* A plain button: the ghost variant's text colour would override the danger colour. */}
+        <button
+          type="button"
+          className="mr-auto min-h-11 px-1 text-sm font-semibold text-danger disabled:text-faint"
+          disabled={remove.isPending}
+          onClick={() => window.confirm(t('barber.services.confirmDelete')) && remove.mutate()}
+        >
+          {t('barber.services.delete')}
+        </button>
         <Button variant="ghost" className="min-h-11 px-3 text-sm" onClick={onEdit}>
           {t('barber.services.edit')}
         </Button>
