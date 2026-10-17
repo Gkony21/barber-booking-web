@@ -13,7 +13,7 @@ const pendingRequest = {
   serviceId: 9, serviceName: 'Κούρεμα', durationMinutes: 30, price: 12.5,
   startTime: '2026-10-14T10:00:00+03:00', endTime: '2026-10-14T10:30:00+03:00', status: 'PENDING', cancelledBy: null, note: null,
 }
-const APPOINTMENTS = 'GET /barbers/me/appointments?from=2026-10-13&to=2026-10-27'
+const APPOINTMENTS = 'GET /barbers/me/appointments?from=2026-10-13&to=2027-01-11'
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] })

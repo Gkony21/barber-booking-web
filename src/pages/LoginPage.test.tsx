@@ -26,7 +26,7 @@ it('logs in and returns to the page the user came from', async () => {
 })
 
 it('shows a Greek message for wrong credentials', async () => {
-  mockApi({ 'POST /auth/login': () => ({ status: 401, json: { detail: 'Invalid email or password' } }) })
+  mockApi({ 'POST /auth/login': () => ({ status: 401, json: { detail: 'Invalid email or password', code: 'INVALID_CREDENTIALS' } }) })
   renderApp('/login')
 
   await fillAndSubmit()

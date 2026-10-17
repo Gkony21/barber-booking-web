@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { ApiError } from '../../api/client'
+import { errorMessage } from '../../lib/errors'
 import { barberMeApi } from '../../api/endpoints'
 import type { Barber } from '../../api/types'
 import { Button } from '../../components/Button'
@@ -55,12 +55,7 @@ export function BarberLinkCard({ barber }: { barber: Barber }) {
     save.mutate()
   }
 
-  const saveError =
-    save.error instanceof ApiError && save.error.status === 409
-      ? t('barber.profile.linkTaken')
-      : save.error
-        ? t('barber.profile.linkInvalid')
-        : null
+  const saveError = save.error ? errorMessage(save.error, t) : null
 
   return (
     <section className="flex flex-col gap-3 rounded-2xl border border-accent/40 bg-surface p-4">

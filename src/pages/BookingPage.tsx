@@ -15,7 +15,7 @@ import { FadeLines } from '../components/Logo'
 import { Button } from '../components/Button'
 import { DayPicker } from '../components/DayPicker'
 import { ErrorState, Loading, Notice } from '../components/States'
-import { errorMessage } from '../lib/errors'
+import { errorMessage, hasCode } from '../lib/errors'
 import { bookableDays, formatPrice } from '../lib/format'
 
 export function BookingPage() {
@@ -139,7 +139,7 @@ function BookingForm({ barber, services }: { barber: Barber; services: { id: num
       void queryClient.invalidateQueries({ queryKey: ['appointments'] })
     },
     onError: (error) => {
-      if (error instanceof ApiError && error.status === 409) {
+      if (hasCode(error, 'SLOT_TAKEN')) {
         setTime(null)
         void availability.refetch()
       }
@@ -212,12 +212,6 @@ function BookingForm({ barber, services }: { barber: Barber; services: { id: num
         </div>
       </section>
 
-      {book.isError && (
-        <Notice tone="error">
-          {book.error instanceof ApiError && book.error.status === 409 ? t('booking.slotTaken') : errorMessage(book.error, t)}
-        </Notice>
-      )}
-
       {/* Keeps the last time slots reachable above the fixed booking bar. */}
       <div aria-hidden="true" className="h-24" />
 
@@ -230,6 +224,8 @@ function BookingForm({ barber, services }: { barber: Barber; services: { id: num
         }`}
       >
         <div className="mx-auto flex max-w-lg flex-col gap-2">
+          {/* In the bar, next to the button, so it is seen without scrolling. */}
+          {book.isError && <Notice tone="error">{errorMessage(book.error, t)}</Notice>}
           {!session ? (
             <Link
               to={`/login?next=${encodeURIComponent(location.pathname)}`}

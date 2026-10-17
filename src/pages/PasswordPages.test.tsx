@@ -77,7 +77,7 @@ it('sets a new password from the emailed link', async () => {
 })
 
 it('offers a new link when the old one has expired', async () => {
-  mockApi({ 'POST /auth/reset-password': () => ({ status: 400, json: { detail: 'Invalid or expired reset link' } }) })
+  mockApi({ 'POST /auth/reset-password': () => ({ status: 400, json: { detail: 'Invalid or expired reset link', code: 'INVALID_RESET_LINK' } }) })
   renderApp('/reset-password?token=old')
   const user = userEvent.setup()
 

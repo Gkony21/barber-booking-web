@@ -44,7 +44,7 @@ it('deletes the account after the password is confirmed, then signs out', async 
 
 it('explains a wrong password without deleting', async () => {
   logInAs('maria@test.gr', 'CUSTOMER')
-  mockApi({ 'DELETE /users/me': () => ({ status: 400, json: { detail: 'Wrong password' } }) })
+  mockApi({ 'DELETE /users/me': () => ({ status: 400, json: { detail: 'Wrong password', code: 'WRONG_PASSWORD' } }) })
   renderApp('/account')
   const user = userEvent.setup()
 

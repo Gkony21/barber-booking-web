@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { ApiError } from '../api/client'
 import { authApi } from '../api/endpoints'
 import { Button } from '../components/Button'
 import { Notice } from '../components/States'
@@ -34,8 +33,7 @@ export function RegisterPage() {
       await authApi.register({ ...form, role: isBarber ? 'BARBER' : 'CUSTOMER', acceptTerms })
       navigate(`/check-email?email=${encodeURIComponent(form.email.trim())}`)
     } catch (e) {
-      if (e instanceof ApiError && e.status === 409) setError(t('auth.emailTaken'))
-      else setError(errorMessage(e, t))
+      setError(errorMessage(e, t))
     } finally {
       setSubmitting(false)
     }

@@ -1,14 +1,13 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { ApiError } from '../api/client'
 import { authApi } from '../api/endpoints'
 import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/Button'
 import { Notice } from '../components/States'
 import { PasswordField } from '../components/PasswordField'
 import { TextField } from '../components/TextField'
-import { errorMessage } from '../lib/errors'
+import { errorMessage, hasCode } from '../lib/errors'
 import { safeNext } from '../lib/navigation'
 
 export function LoginPage() {
@@ -36,11 +35,8 @@ export function LoginPage() {
       const home = session.role === 'BARBER' ? '/barber' : session.role === 'ADMIN' ? '/admin' : '/'
       navigate(next === '/' ? home : next, { replace: true })
     } catch (e) {
-      if (e instanceof ApiError && e.status === 401) setError(t('auth.invalidCredentials'))
-      else if (e instanceof ApiError && e.code === 'EMAIL_NOT_VERIFIED') {
-        setUnverified(true)
-        setError(t('auth.emailNotVerified'))
-      } else setError(errorMessage(e, t))
+      setUnverified(hasCode(e, 'EMAIL_NOT_VERIFIED'))
+      setError(errorMessage(e, t))
     } finally {
       setSubmitting(false)
     }

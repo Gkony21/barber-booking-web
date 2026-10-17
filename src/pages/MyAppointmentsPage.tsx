@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { ApiError } from '../api/client'
 import { appointmentsApi } from '../api/endpoints'
 import type { Appointment } from '../api/types'
 import { Button } from '../components/Button'
@@ -89,7 +88,7 @@ function AppointmentCard({ appointment, cancellable = false }: { appointment: Ap
 
       {cancel.isError && (
         <Notice tone="error">
-          {cancel.error instanceof ApiError && cancel.error.status === 400 ? t('appointments.cancelTooLate') : errorMessage(cancel.error, t)}
+          {errorMessage(cancel.error, t)}
         </Notice>
       )}
       {cancellable && (

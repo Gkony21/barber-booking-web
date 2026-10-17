@@ -1,13 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { ApiError } from '../../api/client'
 import { barberMeApi } from '../../api/endpoints'
 import { Button } from '../../components/Button'
 import { Notice } from '../../components/States'
 import { TextField } from '../../components/TextField'
 import { errorMessage } from '../../lib/errors'
-import { bookableDays, formatPrice } from '../../lib/format'
+import { bookableDays, formatPrice, formatTime } from '../../lib/format'
 
 // Quarter-hour choices; a barber may squeeze someone in outside their usual hours.
 const TIMES = Array.from({ length: (24 - 6) * 4 }, (_, i) => {
@@ -100,7 +99,7 @@ export function NewAppointmentForm({ onDone }: { onDone: (saved: boolean) => voi
 
       {save.isError && (
         <Notice tone="error">
-          {save.error instanceof ApiError && save.error.status === 409 ? t('barber.schedule.overlap') : errorMessage(save.error, t)}
+          {errorMessage(save.error, t)}
         </Notice>
       )}
 
@@ -116,9 +115,9 @@ export function NewAppointmentForm({ onDone }: { onDone: (saved: boolean) => voi
   )
 }
 
-/** The next quarter hour from now, within the selectable range. */
+/** The next quarter hour from now in Athens (the barbers' time zone), within the selectable range. */
 function nextQuarter(): string {
-  const now = new Date()
-  const minutes = Math.min(23 * 60 + 45, Math.max(6 * 60, Math.ceil((now.getHours() * 60 + now.getMinutes()) / 15) * 15))
+  const [hours, mins] = formatTime(new Date().toISOString()).split(':').map(Number)
+  const minutes = Math.min(23 * 60 + 45, Math.max(6 * 60, Math.ceil((hours * 60 + mins) / 15) * 15))
   return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`
 }
