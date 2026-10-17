@@ -107,7 +107,7 @@ export function NewAppointmentForm({ onDone }: { onDone: (saved: boolean) => voi
         <Button type="submit" className="flex-1" disabled={!name.trim() || !chosenService || save.isPending}>
           {t('barber.schedule.save')}
         </Button>
-        <Button type="button" variant="secondary" onClick={() => onDone(false)}>
+        <Button type="button" variant="tonal" onClick={() => onDone(false)}>
           {t('barber.schedule.close')}
         </Button>
       </div>

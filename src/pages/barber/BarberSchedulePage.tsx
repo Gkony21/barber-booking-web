@@ -194,7 +194,7 @@ function AppointmentRow({ appointment, dayLabel }: { appointment: Appointment; d
             <Button className="flex-1" disabled={action.isPending} onClick={() => run('confirm')}>
               {t('barber.schedule.confirm')}
             </Button>
-            <Button variant="secondary" className="flex-1" disabled={action.isPending} onClick={() => run('reject')}>
+            <Button variant="tonal" className="flex-1" disabled={action.isPending} onClick={() => run('reject')}>
               {t('barber.schedule.reject')}
             </Button>
           </>
