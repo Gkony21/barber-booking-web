@@ -43,11 +43,11 @@ it('lets a barber enter a phone booking, and explains overlaps', async () => {
   let attempts = 0
   const calls = mockApi({
     'GET /barbers/me': () => ({ json: barber }),
-    'GET /barbers/me/appointments?from=2026-10-13&to=2026-10-27': () => ({ json: [] }),
+    'GET /barbers/me/appointments?from=2026-10-13&to=2027-01-11': () => ({ json: [] }),
     'GET /barbers/me/services': () => ({ json: [service] }),
     'GET /barbers/me/working-hours': () => ({ json: [{ dayOfWeek: 'TUESDAY', startTime: '10:00', endTime: '20:00' }] }),
     'POST /barbers/me/appointments': () =>
-      ++attempts === 1 ? { status: 409, json: { detail: 'overlap' } } : { status: 201, json: { id: 1 } },
+      ++attempts === 1 ? { status: 409, json: { detail: 'This time overlaps another appointment', code: 'OVERLAPS_APPOINTMENT' } } : { status: 201, json: { id: 1 } },
   })
   renderApp('/barber')
   const user = userEvent.setup()
@@ -72,7 +72,7 @@ it('shows the barber their link and explains a taken one', async () => {
   mockApi({
     'GET /barbers/me': () => ({ json: barber }),
     'GET /barbers/me/photos': () => ({ json: [] }),
-    'PUT /barbers/me': () => ({ status: 409, json: { detail: 'This link is already taken' } }),
+    'PUT /barbers/me': () => ({ status: 409, json: { detail: 'This link is already taken', code: 'LINK_TAKEN' } }),
   })
   renderApp('/barber/profile')
   const user = userEvent.setup()

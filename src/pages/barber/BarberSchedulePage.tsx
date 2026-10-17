@@ -36,7 +36,8 @@ export function BarberSchedulePage() {
 
 function Schedule({ barber }: { barber: Barber }) {
   const { t } = useTranslation()
-  const [days] = useState(() => bookableDays())
+  // As far ahead as the barber can enter appointments by hand (90 days), not just the customers' 14.
+  const [days] = useState(() => bookableDays(91))
   const [adding, setAdding] = useState(false)
   const [justSaved, setJustSaved] = useState(false)
   const from = days[0].iso
