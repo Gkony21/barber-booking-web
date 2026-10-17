@@ -14,6 +14,7 @@ const pendingRequest = {
   startTime: '2026-10-14T10:00:00+03:00', endTime: '2026-10-14T10:30:00+03:00', status: 'PENDING', cancelledBy: null, note: null,
 }
 const APPOINTMENTS = 'GET /barbers/me/appointments?from=2026-10-13&to=2027-01-11'
+const OCTOBER = 'GET /barbers/me/appointments?from=2026-10-01&to=2026-10-31'
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] })
@@ -35,6 +36,8 @@ it('takes a barber without a profile through setting one up', async () => {
       return { status: 201, json: { ...barber, status: 'PENDING' } }
     },
     [APPOINTMENTS]: () => ({ json: [] }),
+    [OCTOBER]: () => ({ json: [] }),
+    'GET /barbers/me/time-off': () => ({ json: [] }),
     'GET /barbers/me/services': () => ({ json: [] }),
     'GET /barbers/me/working-hours': () => ({ json: [] }),
   })
@@ -56,6 +59,8 @@ it('lets the barber accept a booking request', async () => {
   const calls = mockApi({
     'GET /barbers/me': () => ({ json: barber }),
     [APPOINTMENTS]: () => ({ json: [accepted ? { ...pendingRequest, status: 'CONFIRMED' } : pendingRequest] }),
+    [OCTOBER]: () => ({ json: [accepted ? { ...pendingRequest, status: 'CONFIRMED' } : pendingRequest] }),
+    'GET /barbers/me/time-off': () => ({ json: [] }),
     'GET /barbers/me/services': () => ({ json: [service] }),
     'GET /barbers/me/working-hours': () => ({ json: [{ dayOfWeek: 'WEDNESDAY', startTime: '10:00', endTime: '20:00' }] }),
     'POST /barbers/me/appointments/31/confirm': () => {
@@ -71,8 +76,13 @@ it('lets the barber accept a booking request', async () => {
 
   await user.click(screen.getByRole('button', { name: 'Αποδοχή' }))
 
-  expect(await screen.findByRole('heading', { name: 'Αύριο' })).toBeInTheDocument()
+  await vi.waitFor(() => expect(screen.queryByRole('heading', { name: /Αιτήματα για έγκριση/ })).not.toBeInTheDocument())
   expect(screen.queryByRole('button', { name: 'Αποδοχή' })).not.toBeInTheDocument()
+
+  // Tomorrow on the calendar now holds the confirmed appointment.
+  await user.click(screen.getByRole('button', { name: /14 Οκτωβρίου, 1 ραντεβού/ }))
+  expect(await screen.findByRole('heading', { name: 'Αύριο' })).toBeInTheDocument()
+  expect(screen.getByText('Μαρία')).toBeInTheDocument()
   expect(calls.some((c) => c.key === 'POST /barbers/me/appointments/31/confirm')).toBe(true)
 })
 
