@@ -24,6 +24,8 @@ it('splits main services from extras and suggests what to add', async () => {
 
   await user.click(screen.getByRole('button', { name: '+ Έξτρα' }))
   expect(screen.getByPlaceholderText('π.χ. Λούσιμο')).toBeInTheDocument()
+  // The section decides the kind; the form has no main/extra switch.
+  expect(screen.queryByRole('radio')).not.toBeInTheDocument()
   await user.type(screen.getByLabelText('Όνομα'), 'Σχέδια')
   await user.type(screen.getByLabelText('Τιμή (€)'), '5')
   await user.click(screen.getByRole('button', { name: 'Αποθήκευση' }))

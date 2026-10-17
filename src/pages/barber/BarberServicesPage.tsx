@@ -142,14 +142,14 @@ function ServiceRow({ service, onEdit }: { service: ServiceOffering; onEdit: () 
   )
 }
 
-function ServiceForm({ kind: initialKind, service, onDone }: { kind: ServiceKind; service?: ServiceOffering; onDone: () => void }) {
+// The section decides the kind: services added under "Έξτρα" are extras, the rest main services.
+function ServiceForm({ kind, service, onDone }: { kind: ServiceKind; service?: ServiceOffering; onDone: () => void }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [name, setName] = useState(service?.name ?? '')
   const [description, setDescription] = useState(service?.description ?? '')
   const [duration, setDuration] = useState(service?.durationMinutes ?? 30)
   const [price, setPrice] = useState(service ? String(service.price) : '')
-  const [kind, setKind] = useState<ServiceKind>(initialKind)
   const main = kind === 'MAIN'
 
   const priceValue = Number(price.replace(',', '.'))
@@ -209,21 +209,6 @@ function ServiceForm({ kind: initialKind, service, onDone }: { kind: ServiceKind
           </select>
         </div>
         <TextField onSurface label={t('barber.services.price')} inputMode="decimal" required value={price} onChange={(e) => setPrice(e.target.value)} />
-      </div>
-
-      {/* Lets a barber move a service between the two lists, e.g. turn a 0 € wash into an extra. */}
-      <div role="radiogroup" aria-label={t('barber.services.kind')} className="flex gap-1 rounded-xl bg-surface-2 p-1">
-        {(['MAIN', 'EXTRA'] as const).map((option) => (
-          <label
-            key={option}
-            className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-lg text-sm font-semibold ${
-              kind === option ? 'bg-accent text-ground' : 'text-muted'
-            }`}
-          >
-            <input type="radio" name="kind" checked={kind === option} onChange={() => setKind(option)} className="sr-only" />
-            {option === 'MAIN' ? t('barber.services.kindMain') : t('barber.services.kindExtra')}
-          </label>
-        ))}
       </div>
 
       {save.isError && <Notice tone="error">{errorMessage(save.error, t)}</Notice>}
