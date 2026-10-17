@@ -7,7 +7,7 @@ import type { Appointment, Barber } from '../../api/types'
 import { Button } from '../../components/Button'
 import { ErrorState, Loading, Notice } from '../../components/States'
 import { errorMessage } from '../../lib/errors'
-import { athensDate, bookableDays, formatDayHeading, formatPrice, formatTime } from '../../lib/format'
+import { athensDate, bookableDays, formatDayHeading, formatPrice, formatTime, servicesOf } from '../../lib/format'
 import { NewAppointmentForm } from './NewAppointmentForm'
 import { ProfileForm } from './ProfileForm'
 import { useMyBarber } from './useMyBarber'
@@ -169,7 +169,7 @@ function AppointmentRow({ appointment, dayLabel }: { appointment: Appointment; d
             )}
           </span>
           <span className="text-sm text-muted">
-            {appointment.serviceName} · {formatPrice(appointment.price)}
+            {servicesOf(appointment)} · {formatPrice(appointment.price)}
           </span>
           {appointment.note && <span className="text-sm text-muted italic">“{appointment.note}”</span>}
         </div>

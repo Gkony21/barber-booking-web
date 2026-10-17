@@ -38,8 +38,12 @@ export interface ServiceOffering {
   description: string | null
   durationMinutes: number
   price: number
+  kind: ServiceKind
   active: boolean
 }
+
+/** MAIN: a service or package, the customer picks one. EXTRA: added on top, any number. */
+export type ServiceKind = 'MAIN' | 'EXTRA'
 
 export interface Availability {
   barberId: number
@@ -59,6 +63,8 @@ export interface Appointment {
   customerPhone: string | null
   serviceId: number
   serviceName: string
+  /** Added on top of the main service; durationMinutes and price are totals including them. */
+  extras: { name: string; price: number; durationMinutes: number }[]
   durationMinutes: number
   price: number
   startTime: string
@@ -144,6 +150,7 @@ export interface ServiceInput {
   description: string | null
   durationMinutes: number
   price: number
+  kind: ServiceKind
 }
 
 export type BarberStatus = 'PENDING' | 'APPROVED' | 'SUSPENDED'

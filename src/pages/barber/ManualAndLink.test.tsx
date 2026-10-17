@@ -8,7 +8,7 @@ const barber = {
   city: 'Σπάρτη', status: 'APPROVED', autoConfirmBookings: true, slotStepMinutes: 30, shopId: null, shopName: null, shopAddress: null, shopCity: null, bookingWindowDays: 14,
   coverUrl: null, photoCount: 0, fromPrice: 14, nextAvailable: null, latitude: null, longitude: null,
 }
-const service = { id: 9, name: 'Κούρεμα', description: null, durationMinutes: 30, price: 14, active: true }
+const service = { id: 9, name: 'Κούρεμα', description: null, durationMinutes: 30, price: 14, kind: 'MAIN', active: true }
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] })
@@ -63,7 +63,7 @@ it('lets a barber enter a phone booking, and explains overlaps', async () => {
   await user.click(screen.getByRole('button', { name: 'Καταχώριση' }))
   expect(await screen.findByText('Το ραντεβού καταχωρίστηκε.')).toBeInTheDocument()
   expect(calls.filter((c) => c.key === 'POST /barbers/me/appointments').at(-1)?.body).toEqual({
-    serviceId: 9, startTime: '2026-10-13T18:00', customerName: 'Κώστας', customerPhone: '6911111111',
+    serviceId: 9, extraIds: [], startTime: '2026-10-13T18:00', customerName: 'Κώστας', customerPhone: '6911111111',
   })
 })
 

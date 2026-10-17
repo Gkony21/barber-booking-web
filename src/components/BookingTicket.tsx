@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import type { Appointment, Barber } from '../api/types'
 import { buildIcs, directionsUrl, downloadIcs } from '../lib/calendar'
-import { athensDate, formatDayHeading, formatPrice, formatTime } from '../lib/format'
+import { athensDate, formatDayHeading, formatPrice, formatTime, servicesOf } from '../lib/format'
 
 /** The booking confirmation, laid out like a ticket. */
 export function BookingTicket({ appointment, barber }: { appointment: Appointment; barber: Barber }) {
@@ -26,7 +26,7 @@ export function BookingTicket({ appointment, barber }: { appointment: Appointmen
         uid: `appointment-${appointment.id}@fade`,
         start: appointment.startTime,
         end: appointment.endTime,
-        title: t('booking.calendarTitle', { service: appointment.serviceName }),
+        title: t('booking.calendarTitle', { service: servicesOf(appointment) }),
         location: address || undefined,
         description: `${t('booking.ticketBarber')}: ${barber.name}`,
       }),
@@ -64,7 +64,7 @@ export function BookingTicket({ appointment, barber }: { appointment: Appointmen
         <dl className="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-[18px] gap-y-3 px-[22px] pt-3.5 pb-[22px] text-[15px]">
           <dt className="text-muted">{t('booking.ticketService')}</dt>
           <dd className="m-0 font-semibold">
-            {appointment.serviceName}, {t('common.minutes', { count: appointment.durationMinutes })}
+            {servicesOf(appointment)}, {t('common.minutes', { count: appointment.durationMinutes })}
           </dd>
           <dt className="text-muted">{t('booking.ticketBarber')}</dt>
           <dd className="m-0 font-semibold">{barber.name}</dd>

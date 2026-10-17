@@ -7,7 +7,7 @@ import type { Appointment } from '../api/types'
 import { Button } from '../components/Button'
 import { ErrorState, Loading, Notice } from '../components/States'
 import { errorMessage } from '../lib/errors'
-import { formatAppointmentTime, formatPrice } from '../lib/format'
+import { formatAppointmentTime, formatPrice, servicesOf } from '../lib/format'
 
 export function MyAppointmentsPage() {
   const { t } = useTranslation()
@@ -77,7 +77,7 @@ function AppointmentCard({ appointment, cancellable = false }: { appointment: Ap
         <div className="flex flex-col gap-0.5">
           <h3 className="font-display text-2xl leading-tight font-extrabold uppercase">{appointment.barberName}</h3>
           <p className="text-muted">
-            {appointment.serviceName} · {formatPrice(appointment.price)}
+            {servicesOf(appointment)} · {formatPrice(appointment.price)}
           </p>
         </div>
         <span className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-bold ${statusStyles[appointment.status]}`}>

@@ -6,7 +6,7 @@ import { Button } from '../../components/Button'
 import { Notice } from '../../components/States'
 import { TextField } from '../../components/TextField'
 import { errorMessage } from '../../lib/errors'
-import { bookableDays, formatPrice, formatTime } from '../../lib/format'
+import { bookableDays, formatPrice, formatServicePrice, formatTime } from '../../lib/format'
 
 // Quarter-hour choices; a barber may squeeze someone in outside their usual hours.
 const TIMES = Array.from({ length: (24 - 6) * 4 }, (_, i) => {
@@ -19,10 +19,12 @@ export function NewAppointmentForm({ onDone }: { onDone: (saved: boolean) => voi
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const services = useQuery({ queryKey: ['barber', 'services'], queryFn: barberMeApi.services })
-  const active = services.data?.filter((s) => s.active) ?? []
+  const active = services.data?.filter((s) => s.active && s.kind === 'MAIN') ?? []
+  const extras = services.data?.filter((s) => s.active && s.kind === 'EXTRA') ?? []
 
   const [today] = useState(() => bookableDays(1)[0].iso)
   const [serviceId, setServiceId] = useState<number | null>(null)
+  const [extraIds, setExtraIds] = useState<number[]>([])
   const [date, setDate] = useState(today)
   const [time, setTime] = useState(() => nextQuarter())
   const [name, setName] = useState('')
@@ -35,6 +37,7 @@ export function NewAppointmentForm({ onDone }: { onDone: (saved: boolean) => voi
     mutationFn: () =>
       barberMeApi.bookManually({
         serviceId: chosenService!,
+        extraIds,
         startTime: `${date}T${time}`,
         customerName: name.trim(),
         customerPhone: phone.trim() || undefined,
@@ -75,6 +78,26 @@ export function NewAppointmentForm({ onDone }: { onDone: (saved: boolean) => voi
           ))}
         </select>
       </label>
+
+      {extras.length > 0 && (
+        <fieldset className="flex flex-col gap-1.5">
+          <legend className="mb-1.5 text-sm font-medium text-muted">{t('barber.schedule.extras')}</legend>
+          {extras.map((s) => (
+            <label key={s.id} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl bg-surface-2 px-3">
+              <input
+                type="checkbox"
+                checked={extraIds.includes(s.id)}
+                onChange={(e) => setExtraIds(e.target.checked ? [...extraIds, s.id] : extraIds.filter((id) => id !== s.id))}
+                className="size-5 accent-accent"
+              />
+              <span className="flex-1">{s.name}</span>
+              <span className="text-sm text-muted">
+                +{t('common.minutes', { count: s.durationMinutes })} · {formatServicePrice(s.price, t)}
+              </span>
+            </label>
+          ))}
+        </fieldset>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <label className="flex flex-col gap-1.5 text-sm font-medium text-muted">
