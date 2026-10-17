@@ -124,7 +124,15 @@ it('adds extras to the chosen service, with their time and price', async () => {
     'GET /barbers/1/availability?serviceId=7&extraIds=9,10&date=2026-10-13': () => ({
       json: { barberId: 1, serviceId: 7, date: '2026-10-13', durationMinutes: 60, startTimes: ['17:00'] },
     }),
-    'POST /appointments': () => ({ status: 201, json: { id: 5 } }),
+    'POST /appointments': () => ({
+      status: 201,
+      json: {
+        id: 5, barberId: 1, barberName: 'Barber Nick', serviceId: 7, serviceName: 'Κούρεμα',
+        extras: [{ name: 'Λούσιμο', price: 0, durationMinutes: 15 }, { name: 'Σχέδια', price: 5, durationMinutes: 15 }],
+        durationMinutes: 60, price: 17, startTime: '2026-10-13T17:00:00+03:00', endTime: '2026-10-13T18:00:00+03:00',
+        status: 'CONFIRMED',
+      },
+    }),
   })
   renderApp('/barbers/1')
   const user = userEvent.setup()
@@ -147,4 +155,6 @@ it('adds extras to the chosen service, with their time and price', async () => {
       barberId: 1, serviceId: 7, extraIds: [9, 10], startTime: '2026-10-13T17:00',
     }),
   )
+  // The ticket names the main service and the extras.
+  expect(await screen.findByText(/Κούρεμα \+ Λούσιμο \+ Σχέδια/)).toBeInTheDocument()
 })
