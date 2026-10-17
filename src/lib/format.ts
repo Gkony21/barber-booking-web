@@ -1,4 +1,5 @@
-import type { Barber } from '../api/types'
+import type { TFunction } from 'i18next'
+import type { Appointment, Barber } from '../api/types'
 
 // Dates are shown in the barbers' time zone, whatever the device is set to.
 const TIME_ZONE = 'Europe/Athens'
@@ -91,4 +92,14 @@ export function placeOf(barber: Pick<Barber, 'shopName' | 'shopAddress' | 'shopC
     ? [barber.shopName, barber.shopAddress, barber.shopCity]
     : [barber.address, barber.city]
   return parts.filter(Boolean).join(', ')
+}
+
+/** A service's price as customers read it: free extras say "Δωρεάν" rather than "0,00 €". */
+export function formatServicePrice(value: number, t: TFunction): string {
+  return value === 0 ? t('common.free') : formatPrice(value)
+}
+
+/** "Κούρεμα + Λούσιμο + Σχέδια": the main service followed by any extras. */
+export function servicesOf(appointment: Pick<Appointment, 'serviceName' | 'extras'>): string {
+  return [appointment.serviceName, ...(appointment.extras ?? []).map((extra) => extra.name)].join(' + ')
 }

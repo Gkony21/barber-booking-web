@@ -45,12 +45,14 @@ export const barbersApi = {
   byLink: (slug: string) => api<Barber>(`/barbers/by-link/${encodeURIComponent(slug)}`),
   services: (id: number) => api<ServiceOffering[]>(`/barbers/${id}/services`),
   photos: (id: number) => api<Photo[]>(`/barbers/${id}/photos`),
-  availability: (id: number, serviceId: number, date: string) =>
-    api<Availability>(`/barbers/${id}/availability?serviceId=${serviceId}&date=${date}`),
+  availability: (id: number, serviceId: number, extraIds: number[], date: string) =>
+    api<Availability>(
+      `/barbers/${id}/availability?serviceId=${serviceId}${extraIds.length ? `&extraIds=${extraIds.join(',')}` : ''}&date=${date}`,
+    ),
 }
 
 export const appointmentsApi = {
-  book: (body: { barberId: number; serviceId: number; startTime: string; note?: string }) =>
+  book: (body: { barberId: number; serviceId: number; extraIds: number[]; startTime: string; note?: string }) =>
     api<Appointment>('/appointments', { method: 'POST', body }),
   mine: () => api<Appointment[]>('/appointments/me'),
   cancel: (id: number) => api<Appointment>(`/appointments/${id}/cancel`, { method: 'POST' }),
@@ -62,7 +64,14 @@ export const barberMeApi = {
   createProfile: (body: BarberProfileInput) => api<Barber>('/barbers/me', { method: 'POST', body }),
   updateProfile: (body: BarberProfileInput) => api<Barber>('/barbers/me', { method: 'PUT', body }),
 
-  bookManually: (body: { serviceId: number; startTime: string; customerName: string; customerPhone?: string; note?: string }) =>
+  bookManually: (body: {
+    serviceId: number
+    extraIds: number[]
+    startTime: string
+    customerName: string
+    customerPhone?: string
+    note?: string
+  }) =>
     api<Appointment>('/barbers/me/appointments', { method: 'POST', body }),
   appointments: (from: string, to: string) => api<Appointment[]>(`/barbers/me/appointments?from=${from}&to=${to}`),
   confirm: (id: number) => api<Appointment>(`/barbers/me/appointments/${id}/confirm`, { method: 'POST' }),
