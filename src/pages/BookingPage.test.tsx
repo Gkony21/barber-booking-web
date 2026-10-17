@@ -64,7 +64,7 @@ it('books the chosen service, day and time', async () => {
 
 it('asks the customer to pick another time when the slot was just taken', async () => {
   logInAs('maria@test.gr', 'CUSTOMER')
-  api({ status: 409, json: { detail: 'This time is no longer available' } })
+  api({ status: 409, json: { detail: 'This time is no longer available', code: 'SLOT_TAKEN' } })
   renderApp('/barbers/1')
   const user = userEvent.setup()
 

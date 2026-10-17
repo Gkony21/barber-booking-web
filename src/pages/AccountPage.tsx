@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, Navigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { ApiError } from '../api/client'
 import { authApi } from '../api/endpoints'
 import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/Button'
@@ -28,7 +27,7 @@ export function AccountPage() {
       deletedRef.current = true
       setDeleted(true)
     } catch (e) {
-      setError(e instanceof ApiError && e.status === 400 ? t('account.wrongPassword') : errorMessage(e, t))
+      setError(errorMessage(e, t))
     } finally {
       setSubmitting(false)
     }

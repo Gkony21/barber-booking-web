@@ -1,12 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { ApiError } from '../api/client'
 import { authApi } from '../api/endpoints'
 import { Button } from '../components/Button'
 import { PasswordField } from '../components/PasswordField'
 import { Notice } from '../components/States'
-import { errorMessage } from '../lib/errors'
+import { errorMessage, hasCode } from '../lib/errors'
 
 export function ResetPasswordPage() {
   const { t } = useTranslation()
@@ -29,7 +28,7 @@ export function ResetPasswordPage() {
       await authApi.resetPassword(token, password)
       setDone(true)
     } catch (e) {
-      const linkExpired = e instanceof ApiError && e.status === 400 && e.code !== 'WEAK_PASSWORD'
+      const linkExpired = hasCode(e, 'INVALID_RESET_LINK')
       setError({ message: linkExpired ? t('auth.resetInvalid') : errorMessage(e, t), linkExpired })
     } finally {
       setSubmitting(false)
