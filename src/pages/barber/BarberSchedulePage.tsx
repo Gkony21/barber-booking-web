@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -8,6 +8,7 @@ import { Button } from '../../components/Button'
 import { ErrorState, Loading, Notice } from '../../components/States'
 import { errorMessage } from '../../lib/errors'
 import { athensDate, bookableDays, formatDayHeading, formatPrice, formatTime, servicesOf } from '../../lib/format'
+import { byDay, dayOfWeek, isOff, monthGrid, planDay } from './calendar'
 import { NewAppointmentForm } from './NewAppointmentForm'
 import { ProfileForm } from './ProfileForm'
 import { useMyBarber } from './useMyBarber'
@@ -36,34 +37,62 @@ export function BarberSchedulePage() {
 
 function Schedule({ barber }: { barber: Barber }) {
   const { t } = useTranslation()
-  // As far ahead as the barber can enter appointments by hand (90 days), not just the customers' 14.
-  const [days] = useState(() => bookableDays(91))
-  const [adding, setAdding] = useState(false)
+  const [today] = useState(() => bookableDays(1)[0].iso)
+  const [month, setMonth] = useState(today.slice(0, 7)) // "YYYY-MM"
+  const [selected, setSelected] = useState(today)
+  const [onlyBooked, setOnlyBooked] = useState(false)
+  // Open when adding by hand; a free stretch's "+ Κλείσε" fills in its day and time.
+  const [adding, setAdding] = useState<{ date?: string; time?: string } | null>(null)
   const [justSaved, setJustSaved] = useState(false)
-  const from = days[0].iso
-  const to = days[days.length - 1].iso
+  const formAnchor = useRef<HTMLDivElement>(null)
 
-  const appointments = useQuery({
-    queryKey: ['barber', 'appointments', from, to],
-    queryFn: () => barberMeApi.appointments(from, to),
+  const [year, monthNumber] = month.split('-').map(Number)
+  const grid = monthGrid(year, monthNumber)
+
+  const monthAppointments = useQuery({
+    queryKey: ['barber', 'appointments', 'month', month],
+    queryFn: () => barberMeApi.appointments(grid.days[0], grid.days[grid.days.length - 1]),
     refetchInterval: 60_000, // new bookings show up without a manual refresh
+  })
+  // Requests waiting for an answer, whatever month is on screen.
+  const [horizon] = useState(() => bookableDays(91))
+  const upcoming = useQuery({
+    queryKey: ['barber', 'appointments', horizon[0].iso, horizon[horizon.length - 1].iso],
+    queryFn: () => barberMeApi.appointments(horizon[0].iso, horizon[horizon.length - 1].iso),
+    refetchInterval: 60_000,
   })
   const services = useQuery({ queryKey: ['barber', 'services'], queryFn: barberMeApi.services })
   const hours = useQuery({ queryKey: ['barber', 'hours'], queryFn: barberMeApi.workingHours })
+  const timeOff = useQuery({ queryKey: ['barber', 'time-off'], queryFn: barberMeApi.timeOff })
 
-  const needsServices = services.data?.filter((s) => s.active).length === 0
+  const needsServices = services.data?.filter((s) => s.active && s.kind === 'MAIN').length === 0
   const needsHours = hours.data?.length === 0
+  const requests = (upcoming.data ?? []).filter((a) => a.status === 'PENDING')
 
-  const active = (appointments.data ?? []).filter((a) => a.status === 'PENDING' || a.status === 'CONFIRMED')
-  const requests = active.filter((a) => a.status === 'PENDING')
-  const byDay = new Map<string, Appointment[]>()
-  for (const a of active.filter((a) => a.status === 'CONFIRMED')) {
-    const day = athensDate(a.startTime)
-    byDay.set(day, [...(byDay.get(day) ?? []), a])
+  const days = byDay(monthAppointments.data ?? [])
+  const isClosed = (iso: string) =>
+    isOff(iso, timeOff.data ?? []) || !(hours.data ?? []).some((h) => h.dayOfWeek === dayOfWeek(iso))
+
+  const items = planDay(
+    selected,
+    days.get(selected) ?? [],
+    hours.data ?? [],
+    timeOff.data ?? [],
+    selected === today ? formatTime(new Date().toISOString()) : null,
+  ).filter((item) => item.kind === 'appointment' || (!onlyBooked && selected >= today))
+
+  const showMonth = (next: string) => {
+    setMonth(next)
+    setSelected(next === today.slice(0, 7) ? today : `${next}-01`)
+  }
+  const openForm = (prefill: { date?: string; time?: string }) => {
+    setAdding(prefill)
+    setJustSaved(false)
+    requestAnimationFrame(() => formAnchor.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }))
   }
 
-  const dayTitle = (iso: string) =>
-    iso === days[0].iso ? t('barber.schedule.today') : iso === days[1].iso ? t('barber.schedule.tomorrow') : formatDayHeading(iso)
+  const dayTitle =
+    selected === today ? t('barber.schedule.today') : selected === horizon[1].iso ? t('barber.schedule.tomorrow') : formatDayHeading(selected)
 
   return (
     <div className="flex flex-col gap-7 pt-4">
@@ -88,50 +117,190 @@ function Schedule({ barber }: { barber: Barber }) {
         </section>
       )}
 
-      {adding ? (
-        <NewAppointmentForm
-          onDone={(saved) => {
-            setAdding(false)
-            setJustSaved(saved)
-          }}
-        />
-      ) : (
-        <Button
-          onClick={() => {
-            setAdding(true)
-            setJustSaved(false)
-          }}
-        >
-          {t('barber.schedule.add')}
-        </Button>
-      )}
-      {justSaved && <Notice tone="success">{t('barber.schedule.saved')}</Notice>}
-
-      {appointments.isPending && <Loading />}
-      {appointments.isError && <ErrorState error={appointments.error} onRetry={() => appointments.refetch()} />}
-
       {requests.length > 0 && (
         <section className="flex flex-col gap-3">
           <h2 className="font-display text-lg font-semibold tracking-wide text-accent uppercase">
             {t('barber.schedule.requests')} · {requests.length}
           </h2>
           {requests.map((a) => (
-            <AppointmentRow key={a.id} appointment={a} dayLabel={dayTitle(athensDate(a.startTime))} />
+            <AppointmentRow key={a.id} appointment={a} dayLabel={formatDayHeading(athensDate(a.startTime))} />
           ))}
         </section>
       )}
 
-      {appointments.isSuccess && active.length === 0 && <p className="py-8 text-center text-muted">{t('barber.schedule.empty')}</p>}
+      <MonthCalendar
+        year={year}
+        month={monthNumber}
+        grid={grid}
+        today={today}
+        selected={selected}
+        countOn={(iso) => days.get(iso)?.length ?? 0}
+        isClosed={isClosed}
+        onSelect={setSelected}
+        onMonth={(delta) => showMonth(shiftMonth(month, delta))}
+        onToday={() => showMonth(today.slice(0, 7))}
+      />
 
-      {[...byDay.entries()].map(([day, list]) => (
-        <section key={day} className="flex flex-col gap-3">
-          <h2 className="font-display text-lg font-semibold tracking-wide text-muted uppercase">{dayTitle(day)}</h2>
-          {list.map((a) => (
-            <AppointmentRow key={a.id} appointment={a} />
+      <div ref={formAnchor} className="scroll-mt-4">
+        {adding ? (
+          <NewAppointmentForm
+            key={`${adding.date}-${adding.time}`}
+            initialDate={adding.date}
+            initialTime={adding.time}
+            onDone={(saved) => {
+              setAdding(null)
+              setJustSaved(saved)
+            }}
+          />
+        ) : (
+          <Button className="w-full" onClick={() => openForm({ date: selected >= today ? selected : undefined })}>
+            {t('barber.schedule.add')}
+          </Button>
+        )}
+        {justSaved && (
+          <div className="pt-3">
+            <Notice tone="success">{t('barber.schedule.saved')}</Notice>
+          </div>
+        )}
+      </div>
+
+      <section className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-display text-xl font-extrabold uppercase first-letter:uppercase">{dayTitle}</h2>
+        </div>
+        <div role="radiogroup" aria-label={t('barber.schedule.view')} className="flex gap-1 rounded-xl bg-surface p-1">
+          {([false, true] as const).map((only) => (
+            <button
+              key={String(only)}
+              role="radio"
+              aria-checked={onlyBooked === only}
+              onClick={() => setOnlyBooked(only)}
+              className={`min-h-10 flex-1 rounded-lg text-sm font-semibold ${onlyBooked === only ? 'bg-accent text-ground' : 'text-muted'}`}
+            >
+              {only ? t('barber.schedule.viewBooked') : t('barber.schedule.viewAll')}
+            </button>
           ))}
-        </section>
-      ))}
+        </div>
+
+        {(monthAppointments.isPending || hours.isPending) && <Loading />}
+        {monthAppointments.isError && <ErrorState error={monthAppointments.error} onRetry={() => monthAppointments.refetch()} />}
+
+        {monthAppointments.isSuccess && items.length === 0 && (
+          <p className="py-6 text-center text-muted">
+            {onlyBooked || selected < today
+              ? t('barber.schedule.noneThatDay')
+              : isClosed(selected)
+                ? t('barber.schedule.closed')
+                : t('barber.schedule.fullyBooked')}
+          </p>
+        )}
+
+        {items.map((item) =>
+          item.kind === 'appointment' ? (
+            <AppointmentRow key={item.appointment.id} appointment={item.appointment} />
+          ) : (
+            <button
+              key={`free-${item.start}`}
+              onClick={() => openForm({ date: selected, time: item.start })}
+              className="flex min-h-12 items-center justify-between gap-3 rounded-2xl border-2 border-dashed border-line px-4 text-left text-sm text-muted hover:border-muted"
+            >
+              <span>{t('barber.schedule.free', { from: item.start, to: item.end })}</span>
+              <span className="font-semibold text-accent">{t('barber.schedule.bookHere')}</span>
+            </button>
+          ),
+        )}
+      </section>
     </div>
+  )
+}
+
+function shiftMonth(month: string, delta: number): string {
+  const [y, m] = month.split('-').map(Number)
+  const date = new Date(Date.UTC(y, m - 1 + delta, 1))
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`
+}
+
+const monthTitleFormat = new Intl.DateTimeFormat('el-GR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+const WEEKDAYS = ['Δευ', 'Τρί', 'Τετ', 'Πέμ', 'Παρ', 'Σάβ', 'Κυρ']
+
+/** A month at a glance: one dot per appointment (up to three), closed days dimmed. */
+function MonthCalendar({
+  year,
+  month,
+  grid,
+  today,
+  selected,
+  countOn,
+  isClosed,
+  onSelect,
+  onMonth,
+  onToday,
+}: {
+  year: number
+  month: number
+  grid: { lead: number; days: string[] }
+  today: string
+  selected: string
+  countOn: (iso: string) => number
+  isClosed: (iso: string) => boolean
+  onSelect: (iso: string) => void
+  onMonth: (delta: number) => void
+  onToday: () => void
+}) {
+  const { t } = useTranslation()
+  const arrow = 'flex size-10 items-center justify-center rounded-xl bg-surface text-ink hover:bg-surface-2'
+
+  return (
+    <section className="flex flex-col gap-3" aria-label={t('barber.schedule.calendar')}>
+      <div className="flex items-center gap-2">
+        <h2 className="flex-1 font-display text-2xl font-extrabold uppercase">
+          {monthTitleFormat.format(new Date(Date.UTC(year, month - 1, 15)))}
+        </h2>
+        <button className="min-h-10 rounded-xl bg-surface px-3 text-sm font-semibold text-accent hover:bg-surface-2" onClick={onToday}>
+          {t('barber.schedule.today')}
+        </button>
+        <button className={arrow} aria-label={t('barber.schedule.previousMonth')} onClick={() => onMonth(-1)}>
+          ‹
+        </button>
+        <button className={arrow} aria-label={t('barber.schedule.nextMonth')} onClick={() => onMonth(1)}>
+          ›
+        </button>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1 text-center">
+        {WEEKDAYS.map((day) => (
+          <span key={day} className="pb-1 text-[11px] font-semibold text-muted">
+            {day}
+          </span>
+        ))}
+        {Array.from({ length: grid.lead }, (_, i) => (
+          <span key={`lead-${i}`} />
+        ))}
+        {grid.days.map((iso) => {
+          const count = countOn(iso)
+          const isSelected = iso === selected
+          const dim = iso < today || isClosed(iso)
+          return (
+            <button
+              key={iso}
+              onClick={() => onSelect(iso)}
+              aria-pressed={isSelected}
+              aria-label={`${formatDayHeading(iso)}${count ? `, ${t('barber.schedule.count', { count })}` : ''}`}
+              className={`flex h-12 flex-col items-center justify-center gap-1 rounded-xl text-[15px] font-semibold ${
+                isSelected ? 'bg-ink text-ground' : dim ? 'text-faint hover:bg-surface' : 'text-ink hover:bg-surface'
+              } ${iso === today && !isSelected ? 'ring-2 ring-accent ring-inset' : ''}`}
+            >
+              {Number(iso.slice(8))}
+              <span aria-hidden="true" className="flex h-1.5 gap-0.5">
+                {Array.from({ length: Math.min(count, 3) }, (_, i) => (
+                  <span key={i} className={`size-1.5 rounded-full ${isSelected ? 'bg-ground' : 'bg-accent'}`} />
+                ))}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+    </section>
   )
 }
 

@@ -15,7 +15,16 @@ const TIMES = Array.from({ length: (24 - 6) * 4 }, (_, i) => {
 })
 
 /** For customers who call or walk in: books the time so online customers cannot take it. */
-export function NewAppointmentForm({ onDone }: { onDone: (saved: boolean) => void }) {
+export function NewAppointmentForm({
+  onDone,
+  initialDate,
+  initialTime,
+}: {
+  onDone: (saved: boolean) => void
+  /** Pre-filled from a free stretch in the schedule ("+ Κλείσε"). */
+  initialDate?: string
+  initialTime?: string
+}) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const services = useQuery({ queryKey: ['barber', 'services'], queryFn: barberMeApi.services })
@@ -25,8 +34,8 @@ export function NewAppointmentForm({ onDone }: { onDone: (saved: boolean) => voi
   const [today] = useState(() => bookableDays(1)[0].iso)
   const [serviceId, setServiceId] = useState<number | null>(null)
   const [extraIds, setExtraIds] = useState<number[]>([])
-  const [date, setDate] = useState(today)
-  const [time, setTime] = useState(() => nextQuarter())
+  const [date, setDate] = useState(initialDate ?? today)
+  const [time, setTime] = useState(() => (initialTime && TIMES.includes(initialTime) ? initialTime : nextQuarter()))
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [note, setNote] = useState('')
