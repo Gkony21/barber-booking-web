@@ -5,7 +5,7 @@ import { logInAs, mockApi, renderApp } from '../../test/render'
 
 const barber = {
   id: 4, slug: 'giorgos', name: 'Γιώργος', avatarUrl: null, bio: null, experienceYears: null, specialty: null, address: 'Λεωνίδου 84',
-  city: 'Σπάρτη', status: 'APPROVED', autoConfirmBookings: true, slotStepMinutes: 30, shopId: null, shopName: null,
+  city: 'Σπάρτη', status: 'APPROVED', autoConfirmBookings: true, slotStepMinutes: 30, shopId: null, shopName: null, shopAddress: null, shopCity: null, bookingWindowDays: 14,
   coverUrl: null, photoCount: 0, fromPrice: 14, nextAvailable: null, latitude: null, longitude: null,
 }
 const service = { id: 9, name: 'Κούρεμα', description: null, durationMinutes: 30, price: 14, active: true }
@@ -72,6 +72,7 @@ it('shows the barber their link and explains a taken one', async () => {
   mockApi({
     'GET /barbers/me': () => ({ json: barber }),
     'GET /barbers/me/photos': () => ({ json: [] }),
+    'GET /barbers/me/invitations': () => ({ json: [] }),
     'PUT /barbers/me': () => ({ status: 409, json: { detail: 'This link is already taken', code: 'LINK_TAKEN' } }),
   })
   renderApp('/barber/profile')

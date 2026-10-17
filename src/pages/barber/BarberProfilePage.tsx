@@ -3,6 +3,7 @@ import { ErrorState, Loading } from '../../components/States'
 import { BarberLinkCard } from './BarberLinkCard'
 import { AvatarEditor, WorkPhotosEditor } from './PhotoEditors'
 import { ProfileForm } from './ProfileForm'
+import { ShopSection } from './ShopSection'
 import { useMyBarber } from './useMyBarber'
 
 export function BarberProfilePage() {
@@ -20,6 +21,7 @@ export function BarberProfilePage() {
       {profile.data && <AvatarEditor barber={profile.data} />}
       {profile.data && <BarberLinkCard key={profile.data.slug} barber={profile.data} />}
       <ProfileForm key={profile.data?.id ?? 'new'} barber={profile.data} />
+      {profile.data && <ShopSection barber={profile.data} />}
       {profile.data && <WorkPhotosEditor />}
     </div>
   )

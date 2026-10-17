@@ -6,6 +6,7 @@ import { logInAs, mockApi, renderApp } from '../test/render'
 const barber = {
   id: 1, name: 'Barber Nick', bio: null, experienceYears: 5, specialty: null, address: 'Ερμού 12', city: 'Αθήνα',
   status: 'APPROVED', autoConfirmBookings: true, shopId: 3, shopName: "Nick's Barbershop",
+  shopAddress: 'Αιόλου 5', shopCity: 'Αθήνα', bookingWindowDays: 14,
 }
 const services = [
   { id: 7, name: 'Κούρεμα', description: null, durationMinutes: 30, price: 12, active: true },
@@ -90,4 +91,21 @@ it('shows the free times for the selected day only', async () => {
   const times = await screen.findByRole('heading', { name: 'Τι ώρα;' })
   const section = times.closest('section')!
   expect(await within(section).findAllByRole('button')).toHaveLength(2)
+})
+
+it('offers as many days as the barber takes bookings, and shows the shop address', async () => {
+  mockApi({
+    'GET /barbers/1': () => ({ json: { ...barber, bookingWindowDays: 30 } }),
+    'GET /barbers/1/services': () => ({ json: services }),
+    'GET /barbers/1/photos': () => ({ json: [] }),
+    'GET /barbers/1/availability?serviceId=7&date=2026-10-13': () => ({
+      json: { barberId: 1, serviceId: 7, date: '2026-10-13', durationMinutes: 30, startTimes: [] },
+    }),
+  })
+  renderApp('/barbers/1')
+
+  // Today, Tuesday 13 October, plus 30 days: up to Thursday 12 November.
+  expect(await screen.findByRole('button', { name: 'Πέμ 12' })).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Παρ 13' })).not.toBeInTheDocument()
+  expect(screen.getByText("Nick's Barbershop, Αιόλου 5, Αθήνα")).toBeInTheDocument()
 })

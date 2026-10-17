@@ -8,6 +8,9 @@ import type {
   BarberProfileInput,
   BarberStatus,
   Role,
+  Shop,
+  ShopInput,
+  ShopInvitation,
   ServiceInput,
   ServiceOffering,
   TimeOff,
@@ -30,9 +33,10 @@ export const authApi = {
 }
 
 export const barbersApi = {
-  list: (filters: { city?: string; availableToday?: boolean } = {}) => {
+  list: (filters: { city?: string; shopId?: number; availableToday?: boolean } = {}) => {
     const params = new URLSearchParams()
     if (filters.city) params.set('city', filters.city)
+    if (filters.shopId) params.set('shopId', String(filters.shopId))
     if (filters.availableToday) params.set('availableToday', 'true')
     const query = params.toString()
     return api<Barber[]>(`/barbers${query ? `?${query}` : ''}`)
@@ -87,6 +91,23 @@ export const barberMeApi = {
   addTimeOff: (body: { startDate: string; endDate: string; reason: string | null }) =>
     api<TimeOff>('/barbers/me/time-off', { method: 'POST', body }),
   deleteTimeOff: (id: number) => api<void>(`/barbers/me/time-off/${id}`, { method: 'DELETE' }),
+
+  invitations: () => api<ShopInvitation[]>('/barbers/me/invitations'),
+  acceptInvitation: (id: number) => api<Shop>(`/barbers/me/invitations/${id}/accept`, { method: 'POST' }),
+  declineInvitation: (id: number) => api<void>(`/barbers/me/invitations/${id}/decline`, { method: 'POST' }),
+}
+
+/** Shops: owners manage theirs and invite barbers; members can leave. */
+export const shopsApi = {
+  get: (id: number) => api<Shop>(`/shops/${id}`),
+  create: (body: ShopInput) => api<Shop>('/shops', { method: 'POST', body }),
+  update: (id: number, body: ShopInput) => api<Shop>(`/shops/${id}`, { method: 'PUT', body }),
+  remove: (id: number) => api<void>(`/shops/${id}`, { method: 'DELETE' }),
+  invite: (id: number, email: string) => api<ShopInvitation>(`/shops/${id}/invitations`, { method: 'POST', body: { email } }),
+  invitations: (id: number) => api<ShopInvitation[]>(`/shops/${id}/invitations`),
+  cancelInvitation: (id: number, invitationId: number) =>
+    api<void>(`/shops/${id}/invitations/${invitationId}`, { method: 'DELETE' }),
+  removeBarber: (id: number, barberId: number) => api<void>(`/shops/${id}/barbers/${barberId}`, { method: 'DELETE' }),
 }
 
 export const adminApi = {

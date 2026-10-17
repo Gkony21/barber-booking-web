@@ -30,6 +30,7 @@ export function BarberLinkCard({ barber }: { barber: Barber }) {
         longitude: null,
         autoConfirmBookings: barber.autoConfirmBookings,
         slotStepMinutes: barber.slotStepMinutes,
+        bookingWindowDays: barber.bookingWindowDays,
         slug: value.trim().toLowerCase(),
       }),
     onSuccess: (updated) => {
@@ -69,7 +70,7 @@ export function BarberLinkCard({ barber }: { barber: Barber }) {
             {copied ? t('barber.profile.linkCopied') : t('barber.profile.linkCopy')}
           </Button>
           {typeof navigator.share === 'function' && (
-            <Button variant="secondary" className="min-h-11 text-sm" onClick={() => navigator.share({ url, title: barber.name }).catch(() => undefined)}>
+            <Button variant="tonal" className="min-h-11 text-sm" onClick={() => navigator.share({ url, title: barber.name }).catch(() => undefined)}>
               {t('barber.profile.linkShare')}
             </Button>
           )}
@@ -101,7 +102,7 @@ export function BarberLinkCard({ barber }: { barber: Barber }) {
             <Button type="submit" className="flex-1" disabled={value.length < 3 || save.isPending}>
               {t('barber.profile.save')}
             </Button>
-            <Button type="button" variant="secondary" onClick={() => setEditing(false)}>
+            <Button type="button" variant="tonal" onClick={() => setEditing(false)}>
               {t('barber.services.cancelEdit')}
             </Button>
           </div>

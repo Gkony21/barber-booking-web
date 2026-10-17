@@ -7,7 +7,7 @@ afterEach(() => vi.unstubAllGlobals())
 
 const barber = {
   id: 4, name: 'Thanos', avatarUrl: null, bio: null, experienceYears: null, specialty: null, address: null, city: 'Αθήνα',
-  status: 'APPROVED', autoConfirmBookings: true, shopId: null, shopName: null,
+  status: 'APPROVED', autoConfirmBookings: true, shopId: null, shopName: null, shopAddress: null, shopCity: null, bookingWindowDays: 14,
 }
 
 it('uploads work photos one by one and deletes them', async () => {

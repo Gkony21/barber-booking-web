@@ -5,7 +5,7 @@ import { fakeToken, logInAs, mockApi, renderApp } from '../../test/render'
 
 const barber = {
   id: 4, name: 'Thanos', bio: null, experienceYears: null, specialty: null, address: null, city: 'Αθήνα',
-  status: 'APPROVED', autoConfirmBookings: false, shopId: null, shopName: null,
+  status: 'APPROVED', autoConfirmBookings: false, shopId: null, shopName: null, shopAddress: null, shopCity: null, bookingWindowDays: 14,
 }
 const service = { id: 9, name: 'Κούρεμα', description: null, durationMinutes: 30, price: 12.5, active: true }
 const pendingRequest = {
