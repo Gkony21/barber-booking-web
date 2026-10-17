@@ -100,7 +100,7 @@ function BarberCard({ barber, onApproved }: { barber: AdminBarber; onApproved: (
         )}
         {barber.status !== 'SUSPENDED' && (
           <Button
-            variant="secondary"
+            variant="tonal"
             className="flex-1"
             disabled={change.isPending}
             onClick={() => window.confirm(t('admin.confirmSuspend', { name: barber.name })) && change.mutate('SUSPENDED')}

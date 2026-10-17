@@ -93,7 +93,7 @@ function AppointmentCard({ appointment, cancellable = false }: { appointment: Ap
       )}
       {cancellable && (
         <Button
-          variant="secondary"
+          variant="tonal"
           disabled={cancel.isPending}
           onClick={() => {
             if (window.confirm(t('appointments.confirmCancel'))) cancel.mutate()

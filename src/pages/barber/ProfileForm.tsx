@@ -20,6 +20,7 @@ export function ProfileForm({ barber }: { barber: Barber | null }) {
     city: barber?.city ?? '',
     autoConfirmBookings: barber?.autoConfirmBookings ?? true,
     slotStepMinutes: barber?.slotStepMinutes ?? 30,
+    bookingWindowDays: barber?.bookingWindowDays ?? 14,
   })
   const [saved, setSaved] = useState(false)
 
@@ -35,6 +36,7 @@ export function ProfileForm({ barber }: { barber: Barber | null }) {
         longitude: null,
         autoConfirmBookings: form.autoConfirmBookings,
         slotStepMinutes: form.slotStepMinutes,
+        bookingWindowDays: form.bookingWindowDays,
       }
       return barber ? barberMeApi.updateProfile(body) : barberMeApi.createProfile(body)
     },
@@ -101,33 +103,31 @@ export function ProfileForm({ barber }: { barber: Barber | null }) {
         </span>
       </label>
 
-      <fieldset className="flex flex-col gap-2 rounded-xl bg-surface p-4">
-        <legend className="contents font-semibold">{t('barber.profile.slotStep')}</legend>
-        <div role="radiogroup" className="flex gap-1 rounded-xl bg-surface-2 p-1">
-          {([15, 30] as const).map((minutes) => (
-            <label
-              key={minutes}
-              className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-lg text-sm font-semibold ${
-                form.slotStepMinutes === minutes ? 'bg-accent text-ground' : 'text-muted'
-              }`}
-            >
-              <input
-                type="radio"
-                name="slotStep"
-                value={minutes}
-                checked={form.slotStepMinutes === minutes}
-                onChange={() => {
-                  setSaved(false)
-                  setForm({ ...form, slotStepMinutes: minutes })
-                }}
-                className="sr-only"
-              />
-              {t('barber.profile.minutes', { count: minutes })}
-            </label>
-          ))}
-        </div>
-        <span className="text-sm text-muted">{t('barber.profile.slotStepHint')}</span>
-      </fieldset>
+      <ChoiceGroup
+        legend={t('barber.profile.slotStep')}
+        hint={t('barber.profile.slotStepHint')}
+        name="slotStep"
+        options={[15, 30] as const}
+        label={(minutes) => t('barber.profile.minutes', { count: minutes })}
+        value={form.slotStepMinutes}
+        onChange={(minutes) => {
+          setSaved(false)
+          setForm({ ...form, slotStepMinutes: minutes })
+        }}
+      />
+
+      <ChoiceGroup
+        legend={t('barber.profile.bookingWindow')}
+        hint={t('barber.profile.bookingWindowHint')}
+        name="bookingWindow"
+        options={[14, 30, 60] as const}
+        label={(days) => t(`barber.profile.bookingWindow${days}`)}
+        value={form.bookingWindowDays}
+        onChange={(days) => {
+          setSaved(false)
+          setForm({ ...form, bookingWindowDays: days })
+        }}
+      />
 
       {save.isError && <Notice tone="error">{errorMessage(save.error, t)}</Notice>}
       {saved && <Notice tone="success">{t('barber.setupDone')}</Notice>}
@@ -136,5 +136,51 @@ export function ProfileForm({ barber }: { barber: Barber | null }) {
         {barber ? t('barber.profile.save') : t('barber.profile.create')}
       </Button>
     </form>
+  )
+}
+
+/** A few mutually exclusive choices shown side by side, like a segmented control. */
+function ChoiceGroup<T extends number>({
+  legend,
+  hint,
+  name,
+  options,
+  label,
+  value,
+  onChange,
+}: {
+  legend: string
+  hint: string
+  name: string
+  options: readonly T[]
+  label: (option: T) => string
+  value: T
+  onChange: (option: T) => void
+}) {
+  return (
+    <fieldset className="flex flex-col gap-2 rounded-xl bg-surface p-4">
+      <legend className="contents font-semibold">{legend}</legend>
+      <div role="radiogroup" className="flex gap-1 rounded-xl bg-surface-2 p-1">
+        {options.map((option) => (
+          <label
+            key={option}
+            className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-lg text-sm font-semibold ${
+              value === option ? 'bg-accent text-ground' : 'text-muted'
+            }`}
+          >
+            <input
+              type="radio"
+              name={name}
+              value={option}
+              checked={value === option}
+              onChange={() => onChange(option)}
+              className="sr-only"
+            />
+            {label(option)}
+          </label>
+        ))}
+      </div>
+      <span className="text-sm text-muted">{hint}</span>
+    </fieldset>
   )
 }

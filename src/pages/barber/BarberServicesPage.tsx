@@ -94,7 +94,7 @@ function ServiceRow({ service, onEdit }: { service: ServiceOffering; onEdit: () 
             {t('barber.services.deactivate')}
           </Button>
         ) : (
-          <Button variant="secondary" className="min-h-11 px-3 text-sm" disabled={reactivate.isPending} onClick={() => reactivate.mutate()}>
+          <Button variant="tonal" className="min-h-11 px-3 text-sm" disabled={reactivate.isPending} onClick={() => reactivate.mutate()}>
             {t('barber.services.reactivate')}
           </Button>
         )}
@@ -161,7 +161,7 @@ function ServiceForm({ service, onDone }: { service?: ServiceOffering; onDone: (
         <Button type="submit" className="flex-1" disabled={!valid || save.isPending}>
           {t('barber.services.save')}
         </Button>
-        <Button type="button" variant="secondary" onClick={onDone}>
+        <Button type="button" variant="tonal" onClick={onDone}>
           {t('barber.services.cancelEdit')}
         </Button>
       </div>

@@ -18,8 +18,13 @@ export interface Barber {
   status: 'PENDING' | 'APPROVED' | 'SUSPENDED'
   autoConfirmBookings: boolean
   slotStepMinutes: 15 | 30
+  /** How many days ahead customers can book: two weeks, a month or two months. */
+  bookingWindowDays: BookingWindow
   shopId: number | null
   shopName: string | null
+  /** The shop's address and city; customers find a barber in a shop there. */
+  shopAddress: string | null
+  shopCity: string | null
   coverUrl: string | null
   photoCount: number
   fromPrice: number | null
@@ -98,7 +103,40 @@ export interface BarberProfileInput {
   longitude: number | null
   autoConfirmBookings: boolean
   slotStepMinutes: 15 | 30
+  bookingWindowDays: BookingWindow
   slug?: string
+}
+
+export type BookingWindow = 14 | 30 | 60
+
+export interface Shop {
+  id: number
+  name: string
+  address: string
+  city: string
+  phoneNumber: string | null
+  ownerBarberId: number
+}
+
+export interface ShopInput {
+  name: string
+  address: string
+  city: string
+  phoneNumber: string | null
+}
+
+/** An owner's invitation for a barber to join their shop. */
+export interface ShopInvitation {
+  id: number
+  shopId: number
+  shopName: string
+  shopAddress: string
+  shopCity: string
+  ownerName: string
+  barberId: number
+  barberName: string
+  status: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'CANCELLED'
+  createdAt: string
 }
 
 export interface ServiceInput {

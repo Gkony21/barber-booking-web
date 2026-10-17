@@ -8,7 +8,7 @@ import type { Barber } from '../api/types'
 import { Avatar } from '../components/Avatar'
 import { FadeLines } from '../components/Logo'
 import { ErrorState, Loading, Notice } from '../components/States'
-import { formatPrice, nextFreeKind } from '../lib/format'
+import { formatPrice, nextFreeKind, placeOf } from '../lib/format'
 
 export function BarbersPage() {
   const { t } = useTranslation()
@@ -95,7 +95,7 @@ function FilterChip({ selected, onClick, children }: { selected: boolean; onClic
 
 function BarberCard({ barber }: { barber: Barber }) {
   const { t } = useTranslation()
-  const place = [barber.shopName, barber.address ?? barber.city].filter(Boolean).join(', ')
+  const place = placeOf(barber)
   const next = barber.nextAvailable ? nextFreeKind(barber.nextAvailable) : null
   const nextLabel =
     next &&

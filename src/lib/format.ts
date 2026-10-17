@@ -1,3 +1,5 @@
+import type { Barber } from '../api/types'
+
 // Dates are shown in the barbers' time zone, whatever the device is set to.
 const TIME_ZONE = 'Europe/Athens'
 
@@ -81,4 +83,12 @@ export function nextFreeKind(iso: string, now = new Date()): { kind: 'today' | '
   const [today, tomorrow] = bookableDays(2, now).map((d) => d.iso)
   const kind = date === today ? 'today' : date === tomorrow ? 'tomorrow' : 'later'
   return { kind, day: shortDayFormat.format(new Date(iso)).replace('.', ''), time: formatTime(iso) }
+}
+
+/** Where to find a barber: the shop and its address when they work in one, otherwise their own. */
+export function placeOf(barber: Pick<Barber, 'shopName' | 'shopAddress' | 'shopCity' | 'address' | 'city'>): string {
+  const parts = barber.shopName
+    ? [barber.shopName, barber.shopAddress, barber.shopCity]
+    : [barber.address, barber.city]
+  return parts.filter(Boolean).join(', ')
 }

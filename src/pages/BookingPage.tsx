@@ -16,7 +16,7 @@ import { Button } from '../components/Button'
 import { DayPicker } from '../components/DayPicker'
 import { ErrorState, Loading, Notice } from '../components/States'
 import { errorMessage, hasCode } from '../lib/errors'
-import { bookableDays, formatPrice } from '../lib/format'
+import { bookableDays, formatPrice, placeOf } from '../lib/format'
 
 export function BookingPage() {
   const { t } = useTranslation()
@@ -94,7 +94,7 @@ function BarberHero({ barber }: { barber: Barber }) {
 }
 
 function BarberAbout({ barber }: { barber: Barber }) {
-  const place = [barber.shopName, barber.address, barber.city].filter(Boolean).join(', ')
+  const place = placeOf(barber)
   if (!place && !barber.bio) return null
   return (
     <section className="flex flex-col gap-2">
@@ -117,7 +117,8 @@ function BookingForm({ barber, services }: { barber: Barber; services: { id: num
   const { session } = useAuth()
   const location = useLocation()
   const queryClient = useQueryClient()
-  const days = bookableDays()
+  // Today plus as many days ahead as this barber takes bookings.
+  const days = bookableDays(barber.bookingWindowDays + 1)
 
   const [serviceId, setServiceId] = useState(services[0].id)
   const [date, setDate] = useState(days[0].iso)
