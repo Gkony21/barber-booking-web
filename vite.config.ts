@@ -35,6 +35,16 @@ export default defineConfig({
       },
     }),
   ],
+  // `npm run demo`: the built app plus the API on one address, so a single Cloudflare tunnel
+  // (https://….trycloudflare.com) can show it on any phone. The app calls /api, passed to the
+  // API on this machine with the visitor's address, so rate limits apply per person.
+  preview: {
+    host: true,
+    allowedHosts: ['.trycloudflare.com'],
+    proxy: {
+      '/api': { target: 'http://localhost:8080', rewrite: (path) => path.replace(/^\/api/, ''), xfwd: true },
+    },
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],

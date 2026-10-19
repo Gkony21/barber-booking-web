@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "preview": "vite preview",
+    "demo": "VITE_API_URL=/api vite build && vite preview",
     "generate-icons": "pwa-assets-generator"
   },
   "dependencies": {
