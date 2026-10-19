@@ -22,6 +22,7 @@ export function ProfileForm({ barber }: { barber: Barber | null }) {
     slotStepMinutes: barber?.slotStepMinutes ?? 30,
     bookingWindowDays: barber?.bookingWindowDays ?? 14,
     minNoticeMinutes: barber?.minNoticeMinutes ?? 60,
+    bufferMinutes: barber?.bufferMinutes ?? 0,
   })
   const [saved, setSaved] = useState(false)
 
@@ -39,6 +40,7 @@ export function ProfileForm({ barber }: { barber: Barber | null }) {
         slotStepMinutes: form.slotStepMinutes,
         bookingWindowDays: form.bookingWindowDays,
         minNoticeMinutes: form.minNoticeMinutes,
+        bufferMinutes: form.bufferMinutes,
       }
       return barber ? barberMeApi.updateProfile(body) : barberMeApi.createProfile(body)
     },
@@ -141,6 +143,19 @@ export function ProfileForm({ barber }: { barber: Barber | null }) {
         onChange={(minutes) => {
           setSaved(false)
           setForm({ ...form, minNoticeMinutes: minutes })
+        }}
+      />
+
+      <ChoiceGroup
+        legend={t('barber.profile.buffer')}
+        hint={t('barber.profile.bufferHint')}
+        name="buffer"
+        options={[0, 5, 10, 15] as const}
+        label={(minutes) => (minutes === 0 ? t('barber.profile.bufferNone') : t('barber.profile.bufferMinutes', { count: minutes }))}
+        value={form.bufferMinutes}
+        onChange={(minutes) => {
+          setSaved(false)
+          setForm({ ...form, bufferMinutes: minutes })
         }}
       />
 

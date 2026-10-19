@@ -32,6 +32,7 @@ export function BarberLinkCard({ barber }: { barber: Barber }) {
         slotStepMinutes: barber.slotStepMinutes,
         bookingWindowDays: barber.bookingWindowDays,
         minNoticeMinutes: barber.minNoticeMinutes,
+        bufferMinutes: barber.bufferMinutes,
         slug: value.trim().toLowerCase(),
       }),
     onSuccess: (updated) => {

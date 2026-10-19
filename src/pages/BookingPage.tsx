@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useLocation, useParams } from 'react-router'
+import { Link, useLocation, useParams, useSearchParams } from 'react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { ApiError, mediaUrl } from '../api/client'
@@ -16,13 +16,18 @@ import { Button } from '../components/Button'
 import { DayPicker } from '../components/DayPicker'
 import { ErrorState, Loading, Notice } from '../components/States'
 import { errorMessage, hasCode } from '../lib/errors'
-import { bookableDays, formatPrice, placeOf } from '../lib/format'
+import { bookableDays, formatAppointmentTime, formatPrice, placeOf, servicesOf } from '../lib/format'
 
 export function BookingPage() {
   const { t } = useTranslation()
   // Reached as /barbers/12 or through the barber's short link, /giorgos.
   const params = useParams()
   const byLink = params.slug !== undefined
+  // "Αλλαγή ώρας" from the customer's appointments: /barbers/12?reschedule=34
+  const [search] = useSearchParams()
+  const rescheduleId = Number(search.get('reschedule')) || null
+  const mine = useQuery({ queryKey: ['appointments', 'mine'], queryFn: appointmentsApi.mine, enabled: rescheduleId !== null })
+  const moving = mine.data?.find((a) => a.id === rescheduleId && (a.status === 'PENDING' || a.status === 'CONFIRMED'))
 
   const barber = useQuery({
     queryKey: byLink ? ['barber', 'link', params.slug] : ['barber', Number(params.id)],
@@ -47,7 +52,7 @@ export function BookingPage() {
       <ErrorState error={barber.error} onRetry={() => barber.refetch()} />
     )
   }
-  if (barber.isPending || services.isPending) return <Loading />
+  if (barber.isPending || services.isPending || (rescheduleId !== null && mine.isPending)) return <Loading />
   if (services.isError) return <ErrorState error={services.error} onRetry={() => services.refetch()} />
 
   return (
@@ -55,8 +60,8 @@ export function BookingPage() {
       <BarberHero barber={barber.data} />
       <BarberAbout barber={barber.data} />
       {photos.data && <Gallery layout="strip" title={t('booking.gallery')} photos={photos.data} />}
-      {services.data.some((s) => s.kind === 'MAIN') ? (
-        <BookingForm barber={barber.data} services={services.data} />
+      {moving || services.data.some((s) => s.kind === 'MAIN') ? (
+        <BookingForm barber={barber.data} services={services.data} moving={moving} />
       ) : (
         <p className="text-muted">{t('booking.noServices')}</p>
       )}
@@ -112,7 +117,8 @@ function BarberAbout({ barber }: { barber: Barber }) {
   )
 }
 
-function BookingForm({ barber, services }: { barber: Barber; services: ServiceOffering[] }) {
+/** Books a new appointment, or with `moving` picks a new time for an existing one (same services). */
+function BookingForm({ barber, services, moving }: { barber: Barber; services: ServiceOffering[]; moving?: Appointment }) {
   const { t } = useTranslation()
   const { session } = useAuth()
   const location = useLocation()
@@ -122,7 +128,7 @@ function BookingForm({ barber, services }: { barber: Barber; services: ServiceOf
 
   const mains = services.filter((s) => s.kind === 'MAIN')
   const extras = services.filter((s) => s.kind === 'EXTRA')
-  const [serviceId, setServiceId] = useState(mains[0].id)
+  const [serviceId, setServiceId] = useState(mains[0]?.id ?? 0)
   const [extraIds, setExtraIds] = useState<number[]>([])
   const [note, setNote] = useState('')
   const [date, setDate] = useState(days[0].iso)
@@ -131,18 +137,23 @@ function BookingForm({ barber, services }: { barber: Barber; services: ServiceOf
 
   // Extras add their time and price to the chosen main service.
   const chosen = services.filter((s) => s.id === serviceId || extraIds.includes(s.id))
-  const totalPrice = chosen.reduce((sum, s) => sum + s.price, 0)
-  const totalMinutes = chosen.reduce((sum, s) => sum + s.durationMinutes, 0)
+  const totalPrice = moving ? moving.price : chosen.reduce((sum, s) => sum + s.price, 0)
+  const totalMinutes = moving ? moving.durationMinutes : chosen.reduce((sum, s) => sum + s.durationMinutes, 0)
   const day = days.find((d) => d.iso === date)!
 
   const availability = useQuery({
-    queryKey: ['availability', barber.id, serviceId, extraIds, date],
-    queryFn: () => barbersApi.availability(barber.id, serviceId, extraIds, date),
+    queryKey: moving ? ['availability', barber.id, 'move', moving.id, date] : ['availability', barber.id, serviceId, extraIds, date],
+    queryFn: () =>
+      moving
+        ? barbersApi.availabilityFor(barber.id, moving.durationMinutes, date)
+        : barbersApi.availability(barber.id, serviceId, extraIds, date),
   })
 
   const book = useMutation({
     mutationFn: () =>
-      appointmentsApi.book({ barberId: barber.id, serviceId, extraIds, startTime: `${date}T${time}`, note: note.trim() || undefined }),
+      moving
+        ? appointmentsApi.reschedule(moving.id, `${date}T${time}`)
+        : appointmentsApi.book({ barberId: barber.id, serviceId, extraIds, startTime: `${date}T${time}`, note: note.trim() || undefined }),
     onSuccess: (appointment) => {
       setBooked(appointment)
       void queryClient.invalidateQueries({ queryKey: ['appointments'] })
@@ -165,32 +176,44 @@ function BookingForm({ barber, services }: { barber: Barber; services: ServiceOf
 
   return (
     <>
-      {/* Read like the price board on a barbershop wall: name, dotted leader, price. */}
-      <section className="flex flex-col gap-1">
-        <h2 className="mb-2 font-display text-[26px] font-extrabold uppercase">{t('booking.stepService')}</h2>
-        {mains.map((s) => {
-          const selected = s.id === serviceId
-          return (
-            <button
-              key={s.id}
-              aria-pressed={selected}
-              onClick={() => choose(() => setServiceId(s.id))}
-              className={`flex min-h-14 flex-col gap-0.5 py-3 text-left ${selected ? 'text-accent' : 'text-ink'}`}
-            >
-              <span className="flex w-full items-baseline gap-2">
-                <span aria-hidden="true" className={`size-2 shrink-0 self-center rounded-full ${selected ? 'bg-accent' : 'bg-transparent'}`} />
-                <span className="text-[17px] font-semibold">{s.name}</span>
-                <span aria-hidden="true" className="min-w-6 flex-1 -translate-y-1 border-b-2 border-dotted border-line" />
-                <span className="font-display text-[22px] font-extrabold">{formatPrice(s.price)}</span>
-              </span>
-              {s.description && <span className="pl-4 text-[13px] leading-snug text-ink/75">{s.description}</span>}
-              <span className="pl-4 text-[13px] text-muted">{t('common.minutes', { count: s.durationMinutes })}</span>
-            </button>
-          )
-        })}
-      </section>
+      {moving && (
+        <section className="flex flex-col gap-1 rounded-2xl border-2 border-accent bg-surface p-4">
+          <h2 className="font-display text-xl font-extrabold uppercase">{t('booking.moveTitle')}</h2>
+          <p className="font-semibold">{servicesOf(moving)}</p>
+          <p className="text-sm text-muted first-letter:uppercase">
+            {t('booking.moveFrom')}: {formatAppointmentTime(moving.startTime)}
+          </p>
+        </section>
+      )}
 
-      {extras.length > 0 && (
+      {/* Read like the price board on a barbershop wall: name, dotted leader, price. */}
+      {!moving && (
+        <section className="flex flex-col gap-1">
+          <h2 className="mb-2 font-display text-[26px] font-extrabold uppercase">{t('booking.stepService')}</h2>
+          {mains.map((s) => {
+            const selected = s.id === serviceId
+            return (
+              <button
+                key={s.id}
+                aria-pressed={selected}
+                onClick={() => choose(() => setServiceId(s.id))}
+                className={`flex min-h-14 flex-col gap-0.5 py-3 text-left ${selected ? 'text-accent' : 'text-ink'}`}
+              >
+                <span className="flex w-full items-baseline gap-2">
+                  <span aria-hidden="true" className={`size-2 shrink-0 self-center rounded-full ${selected ? 'bg-accent' : 'bg-transparent'}`} />
+                  <span className="text-[17px] font-semibold">{s.name}</span>
+                  <span aria-hidden="true" className="min-w-6 flex-1 -translate-y-1 border-b-2 border-dotted border-line" />
+                  <span className="font-display text-[22px] font-extrabold">{formatPrice(s.price)}</span>
+                </span>
+                {s.description && <span className="pl-4 text-[13px] leading-snug text-ink/75">{s.description}</span>}
+                <span className="pl-4 text-[13px] text-muted">{t('common.minutes', { count: s.durationMinutes })}</span>
+              </button>
+            )
+          })}
+        </section>
+      )}
+
+      {!moving && extras.length > 0 && (
         <section className="flex flex-col gap-1">
           <StepTitle>{t('booking.stepExtras')}</StepTitle>
           <p className="mb-1 text-[13px] text-muted">{t('booking.extrasHint')}</p>
@@ -262,7 +285,7 @@ function BookingForm({ barber, services }: { barber: Barber; services: ServiceOf
         </div>
       </section>
 
-      {session?.role === 'CUSTOMER' && (
+      {session?.role === 'CUSTOMER' && !moving && (
         <div className="flex flex-col gap-1.5">
           <label htmlFor="note" className="text-sm font-medium text-muted">
             {t('booking.note')}
@@ -320,7 +343,11 @@ function BookingForm({ barber, services }: { barber: Barber; services: ServiceOf
               disabled={!time || book.isPending}
               onClick={() => book.mutate()}
             >
-              <span>{time ? t('booking.cta', { day: `${day.weekday} ${day.day}`, time }) : t('booking.pickTime')}</span>
+              <span>
+                {time
+                  ? t(moving ? 'booking.moveCta' : 'booking.cta', { day: `${day.weekday} ${day.day}`, time })
+                  : t('booking.pickTime')}
+              </span>
               <span className="flex flex-col items-end leading-none">
                 <span className="font-display text-2xl font-extrabold">{formatPrice(totalPrice)}</span>
                 {extraIds.length > 0 && <span className="text-xs font-semibold">{t('common.minutes', { count: totalMinutes })}</span>}
