@@ -9,6 +9,7 @@ async function fillRegistration(password: string, confirm: string) {
   const user = userEvent.setup()
   await user.type(screen.getByLabelText('Όνομα'), 'Maria')
   await user.type(screen.getByLabelText('Email'), 'maria@test.gr')
+  await user.type(screen.getByLabelText('Κινητό'), '6900000000')
   await user.type(screen.getByLabelText('Κωδικός'), password)
   await user.type(screen.getByLabelText('Επιβεβαίωση κωδικού'), confirm)
   await user.click(screen.getByRole('checkbox', { name: /αποδέχομαι τους Όρους χρήσης/ }))

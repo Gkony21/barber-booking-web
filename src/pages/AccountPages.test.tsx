@@ -12,6 +12,7 @@ it('requires accepting the terms to sign up and sends the acceptance', async () 
 
   await user.type(screen.getByLabelText('Όνομα'), 'Maria')
   await user.type(screen.getByLabelText('Email'), 'maria@test.gr')
+  await user.type(screen.getByLabelText('Κινητό'), '6900000000')
   await user.type(screen.getByLabelText('Κωδικός'), 'three-words-here')
   await user.type(screen.getByLabelText('Επιβεβαίωση κωδικού'), 'three-words-here')
   const submit = screen.getByRole('button', { name: 'Δημιουργία λογαριασμού' })
@@ -26,6 +27,7 @@ it('requires accepting the terms to sign up and sends the acceptance', async () 
 it('deletes the account after the password is confirmed, then signs out', async () => {
   logInAs('maria@test.gr', 'CUSTOMER')
   const calls = mockApi({
+    'GET /users/me': () => ({ json: { id: 1, name: 'Maria', email: 'maria@test.gr', phoneNumber: '6900000000', role: 'CUSTOMER' } }),
     'DELETE /users/me': () => ({ status: 204 }),
     'GET /barbers': () => ({ json: [] }),
   })
@@ -38,13 +40,16 @@ it('deletes the account after the password is confirmed, then signs out', async 
   await user.click(screen.getByRole('button', { name: 'Οριστική διαγραφή' }))
 
   expect(await screen.findByText('Ο λογαριασμός σου διαγράφηκε.')).toBeInTheDocument()
-  expect(calls[0]).toMatchObject({ key: 'DELETE /users/me', body: { password: 'my-password' } })
+  expect(calls.find((c) => c.key === 'DELETE /users/me')).toMatchObject({ body: { password: 'my-password' } })
   expect(await screen.findByRole('link', { name: 'Σύνδεση' })).toBeInTheDocument()
 })
 
 it('explains a wrong password without deleting', async () => {
   logInAs('maria@test.gr', 'CUSTOMER')
-  mockApi({ 'DELETE /users/me': () => ({ status: 400, json: { detail: 'Wrong password', code: 'WRONG_PASSWORD' } }) })
+  mockApi({
+    'GET /users/me': () => ({ json: { id: 1, name: 'Maria', email: 'maria@test.gr', phoneNumber: '6900000000', role: 'CUSTOMER' } }),
+    'DELETE /users/me': () => ({ status: 400, json: { detail: 'Wrong password', code: 'WRONG_PASSWORD' } }),
+  })
   renderApp('/account')
   const user = userEvent.setup()
 

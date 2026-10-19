@@ -24,6 +24,10 @@ export const authApi = {
   register: (body: { name: string; email: string; phoneNumber: string; password: string; role: Role; acceptTerms: boolean }) =>
     api<User>('/auth/register', { method: 'POST', body }),
   deleteAccount: (password: string) => api<void>('/users/me', { method: 'DELETE', body: { password } }),
+  me: () => api<User>('/users/me'),
+  updateMe: (body: { name: string; phoneNumber: string }) => api<User>('/users/me', { method: 'PUT', body }),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    api<{ token: string }>('/users/me/password', { method: 'POST', body: { currentPassword, newPassword } }),
   verifyEmail: (token: string) => api<void>('/auth/verify-email', { method: 'POST', body: { token } }),
   resendVerification: (email: string) =>
     api<void>('/auth/resend-verification', { method: 'POST', body: { email } }),

@@ -35,7 +35,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return next
   }, [])
 
-  const value = useMemo(() => ({ session, login, logout }), [session, login, logout])
+  const replaceToken = useCallback((token: string) => {
+    const next = sessionFromToken(token)
+    if (!next) return
+    setAuthToken(token)
+    saveSession(next)
+    setSession(next)
+  }, [])
+
+  const value = useMemo(() => ({ session, login, logout, replaceToken }), [session, login, logout, replaceToken])
 
   return <AuthContext value={value}>{children}</AuthContext>
 }

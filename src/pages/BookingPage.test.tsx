@@ -158,3 +158,17 @@ it('adds extras to the chosen service, with their time and price', async () => {
   // The ticket names the main service and the extras.
   expect(await screen.findByText(/Κούρεμα \+ Λούσιμο \+ Σχέδια/)).toBeInTheDocument()
 })
+
+it('sends a note for the barber and points to the account when the mobile is missing', async () => {
+  logInAs('maria@test.gr', 'CUSTOMER')
+  const calls = api({ status: 400, json: { detail: 'Add a mobile number', code: 'PHONE_REQUIRED' } })
+  renderApp('/barbers/1')
+  const user = userEvent.setup()
+
+  await user.type(await screen.findByLabelText('Σημείωση για τον barber (προαιρετικό)'), 'Σχέδιο στο πλάι')
+  await user.click(await screen.findByRole('button', { name: '18:00' }))
+  await user.click(screen.getByRole('button', { name: /Κλείσε Τρί 13 · 18:00/ }))
+
+  expect(await screen.findByRole('link', { name: 'Πρόσθεσε κινητό' })).toHaveAttribute('href', '/account')
+  expect(calls.find((c) => c.key === 'POST /appointments')?.body).toMatchObject({ note: 'Σχέδιο στο πλάι' })
+})

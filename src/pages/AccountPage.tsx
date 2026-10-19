@@ -3,6 +3,7 @@ import { Link, Navigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { authApi } from '../api/endpoints'
 import { useAuth } from '../auth/AuthContext'
+import { ChangePassword, MyDetails } from './AccountForms'
 import { Button } from '../components/Button'
 import { PasswordField } from '../components/PasswordField'
 import { Notice } from '../components/States'
@@ -49,6 +50,9 @@ export function AccountPage() {
         <span className="text-sm text-muted">{t('account.signedInAs')}</span>
         <span className="font-semibold break-all">{session?.email}</span>
       </section>
+
+      <MyDetails />
+      <ChangePassword />
 
       <Button variant="secondary" onClick={logout}>
         {t('account.logout')}

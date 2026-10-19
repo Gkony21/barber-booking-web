@@ -61,6 +61,7 @@ const statusStyles: Record<Appointment['status'], string> = {
   PENDING: 'bg-surface-2 text-ink',
   REJECTED: 'bg-surface-2 text-muted',
   CANCELLED: 'bg-surface-2 text-muted',
+  EXPIRED: 'bg-surface-2 text-muted',
 }
 
 function AppointmentCard({ appointment, cancellable = false }: { appointment: Appointment; cancellable?: boolean }) {
