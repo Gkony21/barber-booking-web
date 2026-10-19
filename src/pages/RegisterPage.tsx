@@ -49,7 +49,7 @@ export function RegisterPage() {
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
         <TextField label={t('auth.name')} autoComplete="name" required value={form.name} onChange={update('name')} />
         <TextField label={t('auth.email')} type="email" autoComplete="email" required value={form.email} onChange={update('email')} />
-        <TextField label={t('auth.phone')} type="tel" autoComplete="tel" value={form.phoneNumber} onChange={update('phoneNumber')} />
+        <TextField label={t('auth.phone')} hint={t('auth.phoneHint')} type="tel" autoComplete="tel" required value={form.phoneNumber} onChange={update('phoneNumber')} />
         <PasswordField
           label={t('auth.password')}
           autoComplete="new-password"
@@ -89,7 +89,7 @@ export function RegisterPage() {
 
         {error && <Notice tone="error">{error}</Notice>}
 
-        <Button type="submit" disabled={submitting || !form.name || !form.email || form.password.length < 8 || confirm !== form.password || !acceptTerms}>
+        <Button type="submit" disabled={submitting || !form.name || !form.email || !form.phoneNumber.trim() || form.password.length < 8 || confirm !== form.password || !acceptTerms}>
           {t('auth.registerButton')}
         </Button>
       </form>

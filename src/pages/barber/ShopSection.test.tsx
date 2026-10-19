@@ -89,9 +89,10 @@ it('saves how far ahead customers can book', async () => {
   const user = userEvent.setup()
 
   await user.click(await screen.findByRole('radio', { name: '1 μήνα' }))
+  await user.click(screen.getByRole('radio', { name: '2 ώρες πριν' }))
   await user.click(screen.getAllByRole('button', { name: 'Αποθήκευση' }).at(-1)!)
 
   await vi.waitFor(() =>
-    expect(calls.find((c) => c.key === 'PUT /barbers/me')?.body).toMatchObject({ bookingWindowDays: 30 }),
+    expect(calls.find((c) => c.key === 'PUT /barbers/me')?.body).toMatchObject({ bookingWindowDays: 30, minNoticeMinutes: 120 }),
   )
 })

@@ -5,6 +5,8 @@ export interface AuthContextValue {
   session: Session | null
   login: (email: string, password: string) => Promise<Session>
   logout: () => void
+  /** Keeps this device signed in with a new token, e.g. after changing the password. */
+  replaceToken: (token: string) => void
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)

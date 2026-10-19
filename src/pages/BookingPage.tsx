@@ -124,6 +124,7 @@ function BookingForm({ barber, services }: { barber: Barber; services: ServiceOf
   const extras = services.filter((s) => s.kind === 'EXTRA')
   const [serviceId, setServiceId] = useState(mains[0].id)
   const [extraIds, setExtraIds] = useState<number[]>([])
+  const [note, setNote] = useState('')
   const [date, setDate] = useState(days[0].iso)
   const [time, setTime] = useState<string | null>(null)
   const [booked, setBooked] = useState<Appointment | null>(null)
@@ -140,7 +141,8 @@ function BookingForm({ barber, services }: { barber: Barber; services: ServiceOf
   })
 
   const book = useMutation({
-    mutationFn: () => appointmentsApi.book({ barberId: barber.id, serviceId, extraIds, startTime: `${date}T${time}` }),
+    mutationFn: () =>
+      appointmentsApi.book({ barberId: barber.id, serviceId, extraIds, startTime: `${date}T${time}`, note: note.trim() || undefined }),
     onSuccess: (appointment) => {
       setBooked(appointment)
       void queryClient.invalidateQueries({ queryKey: ['appointments'] })
@@ -260,6 +262,23 @@ function BookingForm({ barber, services }: { barber: Barber; services: ServiceOf
         </div>
       </section>
 
+      {session?.role === 'CUSTOMER' && (
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="note" className="text-sm font-medium text-muted">
+            {t('booking.note')}
+          </label>
+          <textarea
+            id="note"
+            rows={2}
+            maxLength={500}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder={t('booking.notePlaceholder')}
+            className="rounded-xl border-2 border-surface bg-surface px-4 py-3 text-ink placeholder:text-faint focus:border-accent focus:outline-none"
+          />
+        </div>
+      )}
+
       {/* Keeps the last time slots reachable above the fixed booking bar. */}
       <div aria-hidden="true" className="h-24" />
 
@@ -273,7 +292,19 @@ function BookingForm({ barber, services }: { barber: Barber; services: ServiceOf
       >
         <div className="mx-auto flex max-w-lg flex-col gap-2">
           {/* In the bar, next to the button, so it is seen without scrolling. */}
-          {book.isError && <Notice tone="error">{errorMessage(book.error, t)}</Notice>}
+          {book.isError && (
+            <Notice tone="error">
+              {errorMessage(book.error, t)}
+              {hasCode(book.error, 'PHONE_REQUIRED') && (
+                <>
+                  {' '}
+                  <Link to="/account" className="font-semibold underline">
+                    {t('booking.addPhone')}
+                  </Link>
+                </>
+              )}
+            </Notice>
+          )}
           {!session ? (
             <Link
               to={`/login?next=${encodeURIComponent(location.pathname)}`}

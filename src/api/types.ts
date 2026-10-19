@@ -2,7 +2,8 @@
 
 export type Role = 'CUSTOMER' | 'BARBER' | 'ADMIN'
 
-export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'CANCELLED'
+/** EXPIRED: a request the barber did not answer in time, closed automatically. */
+export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'CANCELLED' | 'EXPIRED'
 
 export interface Barber {
   id: number
@@ -20,6 +21,8 @@ export interface Barber {
   slotStepMinutes: 15 | 30
   /** How many days ahead customers can book: two weeks, a month or two months. */
   bookingWindowDays: BookingWindow
+  /** Customers book at least this many minutes ahead. */
+  minNoticeMinutes: MinNotice
   shopId: number | null
   shopName: string | null
   /** The shop's address and city; customers find a barber in a shop there. */
@@ -110,10 +113,12 @@ export interface BarberProfileInput {
   autoConfirmBookings: boolean
   slotStepMinutes: 15 | 30
   bookingWindowDays: BookingWindow
+  minNoticeMinutes: MinNotice
   slug?: string
 }
 
 export type BookingWindow = 14 | 30 | 60
+export type MinNotice = 30 | 60 | 120
 
 export interface Shop {
   id: number

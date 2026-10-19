@@ -31,6 +31,7 @@ export function BarberLinkCard({ barber }: { barber: Barber }) {
         autoConfirmBookings: barber.autoConfirmBookings,
         slotStepMinutes: barber.slotStepMinutes,
         bookingWindowDays: barber.bookingWindowDays,
+        minNoticeMinutes: barber.minNoticeMinutes,
         slug: value.trim().toLowerCase(),
       }),
     onSuccess: (updated) => {
