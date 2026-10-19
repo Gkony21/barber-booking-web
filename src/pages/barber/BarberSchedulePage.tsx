@@ -3,9 +3,10 @@ import { Link } from 'react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { barberMeApi } from '../../api/endpoints'
-import type { Appointment, Barber } from '../../api/types'
+import type { Appointment, Barber, TimeOff } from '../../api/types'
 import { Button } from '../../components/Button'
 import { ErrorState, Loading, Notice } from '../../components/States'
+import { TextField } from '../../components/TextField'
 import { errorMessage } from '../../lib/errors'
 import { athensDate, bookableDays, formatDayHeading, formatPrice, formatTime, servicesOf } from '../../lib/format'
 import { byDay, dayOfWeek, isOff, monthGrid, planDay } from './calendar'
@@ -44,6 +45,8 @@ function Schedule({ barber }: { barber: Barber }) {
   // Open when adding by hand; a free stretch's "+ Κλείσε" fills in its day and time.
   const [adding, setAdding] = useState<{ date?: string; time?: string } | null>(null)
   const [justSaved, setJustSaved] = useState(false)
+  // The free stretch being turned into a block of hours, if any.
+  const [blocking, setBlocking] = useState<{ start: string } | null>(null)
   const formAnchor = useRef<HTMLDivElement>(null)
 
   const [year, monthNumber] = month.split('-').map(Number)
@@ -198,15 +201,23 @@ function Schedule({ barber }: { barber: Barber }) {
         {items.map((item) =>
           item.kind === 'appointment' ? (
             <AppointmentRow key={item.appointment.id} appointment={item.appointment} />
+          ) : item.kind === 'block' ? (
+            <BlockRow key={`block-${item.timeOff.id}`} block={item.timeOff} />
+          ) : blocking?.start === item.start ? (
+            <BlockForm key={`blocking-${item.start}`} date={selected} from={item.start} to={item.end} onDone={() => setBlocking(null)} />
           ) : (
-            <button
+            <div
               key={`free-${item.start}`}
-              onClick={() => openForm({ date: selected, time: item.start })}
-              className="flex min-h-12 items-center justify-between gap-3 rounded-2xl border-2 border-dashed border-line px-4 text-left text-sm text-muted hover:border-muted"
+              className="flex min-h-12 items-center gap-2 rounded-2xl border-2 border-dashed border-line pr-2 pl-4 text-sm text-muted"
             >
-              <span>{t('barber.schedule.free', { from: item.start, to: item.end })}</span>
-              <span className="font-semibold text-accent">{t('barber.schedule.bookHere')}</span>
-            </button>
+              <span className="flex-1">{t('barber.schedule.free', { from: item.start, to: item.end })}</span>
+              <button className="min-h-11 px-2 font-semibold text-muted hover:text-ink" onClick={() => setBlocking({ start: item.start })}>
+                {t('barber.schedule.block')}
+              </button>
+              <button className="min-h-11 px-2 font-semibold text-accent" onClick={() => openForm({ date: selected, time: item.start })}>
+                {t('barber.schedule.bookHere')}
+              </button>
+            </div>
           ),
         )}
       </section>
@@ -308,15 +319,19 @@ function AppointmentRow({ appointment, dayLabel }: { appointment: Appointment; d
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const pending = appointment.status === 'PENDING'
+  const noShow = appointment.status === 'NO_SHOW'
+  // Once it has started, a no-show can be marked instead of cancelling.
+  const started = new Date(appointment.startTime).getTime() <= Date.now()
 
   const action = useMutation({
-    mutationFn: (kind: 'confirm' | 'reject' | 'cancel') => barberMeApi[kind](appointment.id),
+    mutationFn: (kind: 'confirm' | 'reject' | 'cancel' | 'noShow') => barberMeApi[kind](appointment.id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['barber', 'appointments'] }),
   })
 
-  const run = (kind: 'confirm' | 'reject' | 'cancel') => {
+  const run = (kind: 'confirm' | 'reject' | 'cancel' | 'noShow') => {
     if (kind === 'reject' && !window.confirm(t('barber.schedule.confirmReject'))) return
     if (kind === 'cancel' && !window.confirm(t('barber.schedule.confirmCancel'))) return
+    if (kind === 'noShow' && !window.confirm(t('barber.schedule.confirmNoShow'))) return
     action.mutate(kind)
   }
 
@@ -334,6 +349,16 @@ function AppointmentRow({ appointment, dayLabel }: { appointment: Appointment; d
             {appointment.manual && (
               <span className="shrink-0 rounded-md bg-surface-2 px-1.5 py-0.5 text-[11px] font-semibold text-muted">
                 {t('barber.schedule.manualBadge')}
+              </span>
+            )}
+            {noShow && (
+              <span className="shrink-0 rounded-md bg-danger/20 px-1.5 py-0.5 text-[11px] font-semibold text-danger">
+                {t('barber.schedule.noShowBadge')}
+              </span>
+            )}
+            {!noShow && (appointment.customerNoShows ?? 0) > 0 && (
+              <span className="shrink-0 rounded-md bg-danger/20 px-1.5 py-0.5 text-[11px] font-semibold text-danger">
+                {t('barber.schedule.pastNoShows', { count: appointment.customerNoShows })}
               </span>
             )}
           </span>
@@ -367,6 +392,12 @@ function AppointmentRow({ appointment, dayLabel }: { appointment: Appointment; d
               {t('barber.schedule.reject')}
             </Button>
           </>
+        ) : noShow ? null : started ? (
+          !appointment.manual && (
+            <Button variant="ghost" className="ml-auto min-h-11 px-3 text-sm" disabled={action.isPending} onClick={() => run('noShow')}>
+              {t('barber.schedule.markNoShow')}
+            </Button>
+          )
         ) : (
           <Button variant="ghost" className="ml-auto min-h-11 px-3 text-sm" disabled={action.isPending} onClick={() => run('cancel')}>
             {t('barber.schedule.cancel')}
@@ -374,5 +405,90 @@ function AppointmentRow({ appointment, dayLabel }: { appointment: Appointment; d
         )}
       </div>
     </article>
+  )
+}
+
+// Quarter hours from..to, for choosing part of a free stretch.
+function quarters(from: string, to: string): string[] {
+  const minutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3))
+  const out: string[] = []
+  for (let m = Math.ceil(minutes(from) / 15) * 15; m <= minutes(to); m += 15) {
+    out.push(`${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`)
+  }
+  return out
+}
+
+/** Keeps part of a free stretch for the barber (a doctor's visit, a break); customers cannot book it. */
+function BlockForm({ date, from, to, onDone }: { date: string; from: string; to: string; onDone: () => void }) {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  const options = quarters(from, to)
+  const [start, setStart] = useState(options[0] ?? from)
+  const [end, setEnd] = useState(options[options.length - 1] ?? to)
+  const [reason, setReason] = useState('')
+
+  const save = useMutation({
+    mutationFn: () =>
+      barberMeApi.addTimeOff({ startDate: date, endDate: date, startTime: start, endTime: end, reason: reason.trim() || null }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['barber', 'time-off'] })
+      onDone()
+    },
+  })
+  const select =
+    'min-h-11 w-full rounded-xl border-2 border-surface-2 bg-surface-2 px-3 text-ink [color-scheme:dark] focus:border-accent focus:outline-none'
+
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border-2 border-accent bg-surface p-4">
+      <span className="font-semibold">{t('barber.schedule.blockTitle')}</span>
+      <div className="grid grid-cols-2 gap-3">
+        <label className="flex flex-col gap-1.5 text-sm text-muted">
+          {t('barber.hours.from')}
+          <select value={start} onChange={(e) => setStart(e.target.value)} className={select}>
+            {options.slice(0, -1).map((time) => (
+              <option key={time}>{time}</option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm text-muted">
+          {t('barber.hours.to')}
+          <select value={end} onChange={(e) => setEnd(e.target.value)} className={select}>
+            {options.filter((time) => time > start).map((time) => (
+              <option key={time}>{time}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <TextField onSurface label={t('barber.schedule.blockReason')} maxLength={255} value={reason} onChange={(e) => setReason(e.target.value)} />
+      {save.isError && <Notice tone="error">{errorMessage(save.error, t)}</Notice>}
+      <div className="flex gap-2">
+        <Button className="flex-1" disabled={end <= start || save.isPending} onClick={() => save.mutate()}>
+          {t('barber.schedule.blockSave')}
+        </Button>
+        <Button variant="tonal" onClick={onDone}>
+          {t('barber.schedule.close')}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function BlockRow({ block }: { block: TimeOff }) {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  const remove = useMutation({
+    mutationFn: () => barberMeApi.deleteTimeOff(block.id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['barber', 'time-off'] }),
+  })
+  return (
+    <div className="flex min-h-12 items-center gap-2 rounded-2xl bg-surface-2 pr-2 pl-4 text-sm">
+      <span className="flex-1">
+        <span className="font-semibold">{t('barber.schedule.blocked', { from: block.startTime, to: block.endTime })}</span>
+        {block.reason && <span className="text-muted"> · {block.reason}</span>}
+      </span>
+      <button className="min-h-11 px-2 font-semibold text-muted hover:text-ink" disabled={remove.isPending} onClick={() => remove.mutate()}>
+        {t('barber.schedule.unblock')}
+      </button>
+    </div>
   )
 }

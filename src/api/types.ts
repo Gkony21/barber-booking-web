@@ -3,7 +3,7 @@
 export type Role = 'CUSTOMER' | 'BARBER' | 'ADMIN'
 
 /** EXPIRED: a request the barber did not answer in time, closed automatically. */
-export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'CANCELLED' | 'EXPIRED'
+export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'CANCELLED' | 'EXPIRED' | 'NO_SHOW'
 
 export interface Barber {
   id: number
@@ -23,6 +23,8 @@ export interface Barber {
   bookingWindowDays: BookingWindow
   /** Customers book at least this many minutes ahead. */
   minNoticeMinutes: MinNotice
+  /** Kept free after each online booking. */
+  bufferMinutes: Buffer
   shopId: number | null
   shopName: string | null
   /** The shop's address and city; customers find a barber in a shop there. */
@@ -76,6 +78,8 @@ export interface Appointment {
   manual: boolean
   cancelledBy: 'CUSTOMER' | 'BARBER' | null
   note: string | null
+  /** For the barber: how many times this customer did not turn up. */
+  customerNoShows?: number
 }
 
 export interface User {
@@ -99,6 +103,9 @@ export interface TimeOff {
   startDate: string // "YYYY-MM-DD", inclusive
   endDate: string
   reason: string | null
+  /** "HH:mm" for a block of hours on one day; null for whole days off. */
+  startTime: string | null
+  endTime: string | null
   activeAppointments: number
 }
 
@@ -114,11 +121,13 @@ export interface BarberProfileInput {
   slotStepMinutes: 15 | 30
   bookingWindowDays: BookingWindow
   minNoticeMinutes: MinNotice
+  bufferMinutes: Buffer
   slug?: string
 }
 
 export type BookingWindow = 14 | 30 | 60
 export type MinNotice = 30 | 60 | 120
+export type Buffer = 0 | 5 | 10 | 15
 
 export interface Shop {
   id: number

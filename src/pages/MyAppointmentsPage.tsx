@@ -62,6 +62,7 @@ const statusStyles: Record<Appointment['status'], string> = {
   REJECTED: 'bg-surface-2 text-muted',
   CANCELLED: 'bg-surface-2 text-muted',
   EXPIRED: 'bg-surface-2 text-muted',
+  NO_SHOW: 'bg-surface-2 text-muted',
 }
 
 function AppointmentCard({ appointment, cancellable = false }: { appointment: Appointment; cancellable?: boolean }) {
@@ -93,15 +94,25 @@ function AppointmentCard({ appointment, cancellable = false }: { appointment: Ap
         </Notice>
       )}
       {cancellable && (
-        <Button
-          variant="tonal"
-          disabled={cancel.isPending}
-          onClick={() => {
-            if (window.confirm(t('appointments.confirmCancel'))) cancel.mutate()
-          }}
-        >
-          {t('appointments.cancel')}
-        </Button>
+        <div className="flex gap-2">
+          {/* Opens the barber's page to pick a new time; the services stay the same. */}
+          <Link
+            to={`/barbers/${appointment.barberId}?reschedule=${appointment.id}`}
+            className="flex min-h-12 flex-1 items-center justify-center rounded-2xl bg-surface-2 px-4 font-semibold text-ink hover:bg-line"
+          >
+            {t('appointments.reschedule')}
+          </Link>
+          <Button
+            variant="tonal"
+            className="flex-1"
+            disabled={cancel.isPending}
+            onClick={() => {
+              if (window.confirm(t('appointments.confirmCancel'))) cancel.mutate()
+            }}
+          >
+            {t('appointments.cancel')}
+          </Button>
+        </div>
       )}
     </article>
   )

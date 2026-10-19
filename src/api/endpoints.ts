@@ -49,6 +49,9 @@ export const barbersApi = {
   byLink: (slug: string) => api<Barber>(`/barbers/by-link/${encodeURIComponent(slug)}`),
   services: (id: number) => api<ServiceOffering[]>(`/barbers/${id}/services`),
   photos: (id: number) => api<Photo[]>(`/barbers/${id}/photos`),
+  /** Free starts for an appointment of a given length (when moving one). */
+  availabilityFor: (id: number, minutes: number, date: string) =>
+    api<Availability>(`/barbers/${id}/availability?minutes=${minutes}&date=${date}`),
   availability: (id: number, serviceId: number, extraIds: number[], date: string) =>
     api<Availability>(
       `/barbers/${id}/availability?serviceId=${serviceId}${extraIds.length ? `&extraIds=${extraIds.join(',')}` : ''}&date=${date}`,
@@ -60,6 +63,8 @@ export const appointmentsApi = {
     api<Appointment>('/appointments', { method: 'POST', body }),
   mine: () => api<Appointment[]>('/appointments/me'),
   cancel: (id: number) => api<Appointment>(`/appointments/${id}/cancel`, { method: 'POST' }),
+  reschedule: (id: number, startTime: string) =>
+    api<Appointment>(`/appointments/${id}/reschedule`, { method: 'POST', body: { startTime } }),
 }
 
 /** Endpoints for the logged-in barber's own profile, schedule and bookings. */
@@ -81,6 +86,7 @@ export const barberMeApi = {
   confirm: (id: number) => api<Appointment>(`/barbers/me/appointments/${id}/confirm`, { method: 'POST' }),
   reject: (id: number) => api<Appointment>(`/barbers/me/appointments/${id}/reject`, { method: 'POST' }),
   cancel: (id: number) => api<Appointment>(`/barbers/me/appointments/${id}/cancel`, { method: 'POST' }),
+  noShow: (id: number) => api<Appointment>(`/barbers/me/appointments/${id}/no-show`, { method: 'POST' }),
 
   services: () => api<ServiceOffering[]>('/barbers/me/services'),
   createService: (body: ServiceInput) => api<ServiceOffering>('/barbers/me/services', { method: 'POST', body }),
@@ -103,7 +109,7 @@ export const barberMeApi = {
     api<Photo>(`/barbers/me/photos/${id}`, { method: 'PATCH', body: { caption } }),
 
   timeOff: () => api<TimeOff[]>('/barbers/me/time-off'),
-  addTimeOff: (body: { startDate: string; endDate: string; reason: string | null }) =>
+  addTimeOff: (body: { startDate: string; endDate: string; reason: string | null; startTime?: string; endTime?: string }) =>
     api<TimeOff>('/barbers/me/time-off', { method: 'POST', body }),
   deleteTimeOff: (id: number) => api<void>(`/barbers/me/time-off/${id}`, { method: 'DELETE' }),
 

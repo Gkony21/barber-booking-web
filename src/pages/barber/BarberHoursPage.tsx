@@ -213,9 +213,11 @@ function TimeOffSection() {
           <li key={period.id} className="flex items-center gap-3 rounded-2xl bg-surface p-4">
             <div className="flex flex-1 flex-col gap-0.5">
               <span className="font-semibold">
-                {period.startDate === period.endDate
-                  ? formatShortDate(period.startDate)
-                  : `${formatShortDate(period.startDate)} – ${formatShortDate(period.endDate)}`}
+                {period.startTime
+                  ? `${formatShortDate(period.startDate)} · ${period.startTime}–${period.endTime}`
+                  : period.startDate === period.endDate
+                    ? formatShortDate(period.startDate)
+                    : `${formatShortDate(period.startDate)} – ${formatShortDate(period.endDate)}`}
               </span>
               {period.reason && <span className="text-sm text-muted">{period.reason}</span>}
             </div>

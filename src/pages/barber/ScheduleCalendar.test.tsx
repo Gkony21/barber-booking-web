@@ -31,6 +31,7 @@ function api() {
     }),
     'GET /barbers/me/appointments?from=2026-11-01&to=2026-11-30': () => ({ json: [] }),
     'GET /barbers/me/time-off': () => ({ json: [] }),
+    'POST /barbers/me/time-off': () => ({ status: 201, json: {} }),
     'GET /barbers/me/services': () => ({ json: [service] }),
     'GET /barbers/me/working-hours': () => ({ json: [{ dayOfWeek: 'THURSDAY', startTime: '10:00', endTime: '18:00' }] }),
   })
@@ -47,12 +48,12 @@ it('reaches a day two months ahead in a few taps and shows what is booked and wh
   await user.click(await screen.findByRole('button', { name: /3 Δεκεμβρίου, 1 ραντεβού/ }))
 
   expect(await screen.findByText('Κώστας')).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: /Ελεύθερο 10:00–16:00/ })).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: /Ελεύθερο 16:30–18:00/ })).toBeInTheDocument()
+  expect(screen.getByText('Ελεύθερο 10:00–16:00')).toBeInTheDocument()
+  expect(screen.getByText('Ελεύθερο 16:30–18:00')).toBeInTheDocument()
 
   // Only what is booked.
   await user.click(screen.getByRole('radio', { name: 'Μόνο ραντεβού' }))
-  expect(screen.queryByRole('button', { name: /Ελεύθερο/ })).not.toBeInTheDocument()
+  expect(screen.queryByText(/Ελεύθερο/)).not.toBeInTheDocument()
   expect(screen.getByText('Κώστας')).toBeInTheDocument()
 })
 
@@ -64,9 +65,32 @@ it('opens the manual booking form at the free time that was tapped', async () =>
 
   // Thursday 15 October, all free.
   await user.click(await screen.findByRole('button', { name: /^Πέμπτη 15 Οκτωβρίου$/ }))
-  await user.click(await screen.findByRole('button', { name: /Ελεύθερο 10:00–18:00/ }))
+  const free = (await screen.findByText('Ελεύθερο 10:00–18:00')).parentElement!
+  await user.click(within(free).getByRole('button', { name: '+ Κλείσε' }))
 
   const form = (await screen.findByRole('heading', { name: 'Νέο ραντεβού' })).closest('form')!
   expect(within(form).getByLabelText('Μέρα')).toHaveValue('2026-10-15')
   expect(within(form).getByLabelText('Ώρα')).toHaveValue('10:00')
+})
+
+it('blocks part of a free stretch for the barber', async () => {
+  logInAs('thanos@test.gr', 'BARBER')
+  const calls = api()
+  calls.length = 0
+  renderApp('/barber')
+  const user = userEvent.setup()
+
+  await user.click(await screen.findByRole('button', { name: /^Πέμπτη 15 Οκτωβρίου$/ }))
+  const free = (await screen.findByText('Ελεύθερο 10:00–18:00')).parentElement!
+  await user.click(within(free).getByRole('button', { name: 'Μπλόκαρε' }))
+  await user.selectOptions(screen.getByLabelText('Από'), '12:00')
+  await user.selectOptions(screen.getByLabelText('Έως'), '14:00')
+  await user.type(screen.getByLabelText(/Λόγος/), 'Γιατρός')
+  await user.click(screen.getByRole('button', { name: 'Μπλοκάρισμα' }))
+
+  await vi.waitFor(() =>
+    expect(calls.find((c) => c.key === 'POST /barbers/me/time-off')?.body).toEqual({
+      startDate: '2026-10-15', endDate: '2026-10-15', startTime: '12:00', endTime: '14:00', reason: 'Γιατρός',
+    }),
+  )
 })

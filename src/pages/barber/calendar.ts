@@ -5,6 +5,7 @@ import { WEEK } from './week'
 /** One row of a day in the schedule: an appointment, or a free stretch inside working hours. */
 export type DayItem =
   | { kind: 'appointment'; start: string; appointment: Appointment }
+  | { kind: 'block'; start: string; end: string; timeOff: TimeOff }
   | { kind: 'free'; start: string; end: string }
 
 // Shorter gaps cannot fit any appointment worth showing.
@@ -16,15 +17,22 @@ export function dayOfWeek(isoDate: string) {
   return WEEK[(new Date(Date.UTC(y, m - 1, d, 12)).getUTCDay() + 6) % 7]
 }
 
+/** A whole day off (blocks of a few hours do not count). */
 export function isOff(isoDate: string, timeOff: TimeOff[]): boolean {
-  return timeOff.some((t) => t.startDate <= isoDate && isoDate <= t.endDate)
+  return timeOff.some((t) => t.startTime === null && t.startDate <= isoDate && isoDate <= t.endDate)
+}
+
+/** Blocks of hours on that day, e.g. 12:00–14:00. */
+export function blocksOn(isoDate: string, timeOff: TimeOff[]): TimeOff[] {
+  return timeOff.filter((t) => t.startTime !== null && t.startDate === isoDate)
 }
 
 /** Active (pending or confirmed) appointments, grouped by their Athens date. */
 export function byDay(appointments: Appointment[]): Map<string, Appointment[]> {
   const days = new Map<string, Appointment[]>()
   for (const a of appointments) {
-    if (a.status !== 'PENDING' && a.status !== 'CONFIRMED') continue
+    // No-shows stay visible so the barber can see them; cancelled ones do not.
+    if (a.status !== 'PENDING' && a.status !== 'CONFIRMED' && a.status !== 'NO_SHOW') continue
     const day = athensDate(a.startTime)
     days.set(day, [...(days.get(day) ?? []), a])
   }
@@ -50,14 +58,20 @@ export function planDay(
     start: formatTime(appointment.startTime),
     appointment,
   }))
+  const blocks = blocksOn(isoDate, timeOff)
+  for (const block of blocks) items.push({ kind: 'block', start: block.startTime!, end: block.endTime!, timeOff: block })
+
+  // Appointments and blocks both take time out of the working hours.
+  const busy = [
+    ...booked.map((a) => ({ start: formatTime(a.startTime), end: formatTime(a.endTime) })),
+    ...blocks.map((b) => ({ start: b.startTime!, end: b.endTime! })),
+  ].sort((a, b) => a.start.localeCompare(b.start))
 
   if (!isOff(isoDate, timeOff)) {
     const shifts = hours.filter((h) => h.dayOfWeek === dayOfWeek(isoDate)).sort((a, b) => a.startTime.localeCompare(b.startTime))
     for (const shift of shifts) {
       let cursor = now && now > shift.startTime ? roundUp(now) : shift.startTime
-      for (const a of booked) {
-        const start = formatTime(a.startTime)
-        const end = formatTime(a.endTime)
+      for (const { start, end } of busy) {
         if (end <= cursor || start >= shift.endTime) continue
         if (start > cursor) addFree(items, cursor, start)
         cursor = end > cursor ? end : cursor
