@@ -34,8 +34,8 @@ it('deletes the account after the password is confirmed, then signs out', async 
   renderApp('/account')
   const user = userEvent.setup()
 
-  expect(screen.getByText('maria@test.gr')).toBeInTheDocument()
-  await user.click(screen.getByRole('button', { name: 'Θέλω να διαγράψω τον λογαριασμό μου' }))
+  expect(await screen.findByText('maria@test.gr')).toBeInTheDocument()
+  await user.click(await screen.findByRole('button', { name: 'Θέλω να διαγράψω τον λογαριασμό μου' }))
   await user.type(screen.getByLabelText('Γράψε τον κωδικό σου για επιβεβαίωση'), 'my-password')
   await user.click(screen.getByRole('button', { name: 'Οριστική διαγραφή' }))
 
@@ -53,7 +53,7 @@ it('explains a wrong password without deleting', async () => {
   renderApp('/account')
   const user = userEvent.setup()
 
-  await user.click(screen.getByRole('button', { name: 'Θέλω να διαγράψω τον λογαριασμό μου' }))
+  await user.click(await screen.findByRole('button', { name: 'Θέλω να διαγράψω τον λογαριασμό μου' }))
   await user.type(screen.getByLabelText('Γράψε τον κωδικό σου για επιβεβαίωση'), 'nope')
   await user.click(screen.getByRole('button', { name: 'Οριστική διαγραφή' }))
 

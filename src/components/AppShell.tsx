@@ -1,7 +1,9 @@
+import { Suspense } from 'react'
 import { Link, NavLink, Outlet } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { Logo } from './Logo'
+import { Loading } from './States'
 
 export function AppShell() {
   const { t } = useTranslation()
@@ -25,7 +27,10 @@ export function AppShell() {
       </header>
 
       <main className="flex flex-1 flex-col px-5 pt-2 pb-6">
-        <Outlet />
+        {/* Pages that load on demand show the loader meanwhile; the header and menu stay. */}
+        <Suspense fallback={<Loading />}>
+          <Outlet />
+        </Suspense>
       </main>
 
       <footer className={`flex justify-center gap-5 px-5 pt-4 text-xs text-muted ${session?.role === 'CUSTOMER' || session?.role === 'BARBER' ? 'pb-28' : 'pb-8'}`}>

@@ -1,3 +1,4 @@
+import { privacyPolicy, termsOfUse } from '../legal/documents'
 import type { LegalDocument } from '../legal/documents'
 
 export function LegalPage({ document }: { document: LegalDocument }) {
@@ -19,4 +20,13 @@ export function LegalPage({ document }: { document: LegalDocument }) {
       ))}
     </article>
   )
+}
+
+// One per route, so the legal texts load only when someone opens them.
+export function TermsPage() {
+  return <LegalPage document={termsOfUse} />
+}
+
+export function PrivacyPage() {
+  return <LegalPage document={privacyPolicy} />
 }
