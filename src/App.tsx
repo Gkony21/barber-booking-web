@@ -1,3 +1,4 @@
+import { lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router'
 import { useAuth } from './auth/AuthContext'
 import { AppShell } from './components/AppShell'
@@ -12,14 +13,16 @@ import { MyAppointmentsPage } from './pages/MyAppointmentsPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { VerifyEmailPage } from './pages/VerifyEmailPage'
-import { privacyPolicy, termsOfUse } from './legal/documents'
-import { AccountPage } from './pages/AccountPage'
-import { LegalPage } from './pages/LegalPage'
-import { AdminBarbersPage } from './pages/admin/AdminBarbersPage'
-import { BarberHoursPage } from './pages/barber/BarberHoursPage'
-import { BarberProfilePage } from './pages/barber/BarberProfilePage'
-import { BarberSchedulePage } from './pages/barber/BarberSchedulePage'
-import { BarberServicesPage } from './pages/barber/BarberServicesPage'
+
+// Pages most visitors never open load on demand, so customers download less on a phone.
+const AccountPage = lazy(() => import('./pages/AccountPage').then((m) => ({ default: m.AccountPage })))
+const AdminBarbersPage = lazy(() => import('./pages/admin/AdminBarbersPage').then((m) => ({ default: m.AdminBarbersPage })))
+const BarberHoursPage = lazy(() => import('./pages/barber/BarberHoursPage').then((m) => ({ default: m.BarberHoursPage })))
+const BarberProfilePage = lazy(() => import('./pages/barber/BarberProfilePage').then((m) => ({ default: m.BarberProfilePage })))
+const BarberSchedulePage = lazy(() => import('./pages/barber/BarberSchedulePage').then((m) => ({ default: m.BarberSchedulePage })))
+const BarberServicesPage = lazy(() => import('./pages/barber/BarberServicesPage').then((m) => ({ default: m.BarberServicesPage })))
+const TermsPage = lazy(() => import('./pages/LegalPage').then((m) => ({ default: m.TermsPage })))
+const PrivacyPage = lazy(() => import('./pages/LegalPage').then((m) => ({ default: m.PrivacyPage })))
 
 export function App() {
   return (
@@ -41,8 +44,8 @@ export function App() {
         <Route path="barber/profile" element={<RequireAuth role="BARBER"><BarberProfilePage /></RequireAuth>} />
         <Route path="admin" element={<RequireAuth role="ADMIN"><AdminBarbersPage /></RequireAuth>} />
         <Route path="account" element={<RequireAuth><AccountPage /></RequireAuth>} />
-        <Route path="terms" element={<LegalPage document={termsOfUse} />} />
-        <Route path="privacy" element={<LegalPage document={privacyPolicy} />} />
+        <Route path="terms" element={<TermsPage />} />
+        <Route path="privacy" element={<PrivacyPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
         <Route path="check-email" element={<CheckEmailPage />} />
