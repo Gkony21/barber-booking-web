@@ -14,17 +14,15 @@ export function isValidWeek(week: Week): boolean {
 }
 
 /**
- * "+ Break": splits the last shift around midday (10:00–20:00 → 10:00–14:00 and 17:00–20:00),
- * or, if it is too short to split, adds an hour after it.
+ * "+ Προσθήκη ωρών": adds another set of hours after the last one, leaving the existing ones as
+ * they are, e.g. 09:00–14:00 then 17:00–21:00 for a split day. Starts at 17:00 when the day ends
+ * by 16:00, otherwise an hour after the last shift, for three hours. Null when nothing fits.
  */
-export function addBreak(shifts: Shift[]): Shift[] {
-  const last = shifts[shifts.length - 1]
-  if (last.start < '14:00' && last.end > '17:00') {
-    return [...shifts.slice(0, -1), { start: last.start, end: '14:00' }, { start: '17:00', end: last.end }]
-  }
-  const nextStart = last.end
-  const nextEnd = addMinutes(nextStart, 60)
-  return [...shifts, { start: nextStart, end: nextEnd > nextStart ? nextEnd : '23:45' }]
+export function addHours(shifts: Shift[]): Shift[] | null {
+  const lastEnd = shifts.length ? shifts[shifts.length - 1].end : '09:00'
+  const start = lastEnd <= '16:00' ? '17:00' : addMinutes(lastEnd, 60)
+  const end = start === '17:00' ? '21:00' : addMinutes(start, 180)
+  return start < end ? [...shifts, { start, end }] : null
 }
 
 function addMinutes(time: string, minutes: number): string {

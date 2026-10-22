@@ -1,22 +1,25 @@
 import { describe, expect, it } from 'vitest'
-import { addBreak, isValidWeek, WEEK, type Week } from './week'
+import { addHours, isValidWeek, WEEK, type Week } from './week'
 
 const emptyWeek = (): Week => Object.fromEntries(WEEK.map((day) => [day, []])) as unknown as Week
 
-describe('addBreak', () => {
-  it('splits a full day around midday', () => {
-    expect(addBreak([{ start: '10:00', end: '20:00' }])).toEqual([
-      { start: '10:00', end: '14:00' },
-      { start: '17:00', end: '20:00' },
+describe('addHours', () => {
+  it('adds afternoon hours after a morning shift, leaving it as it was', () => {
+    expect(addHours([{ start: '09:00', end: '14:00' }])).toEqual([
+      { start: '09:00', end: '14:00' },
+      { start: '17:00', end: '21:00' },
     ])
   })
 
-  it('adds an hour after a shift that cannot be split', () => {
-    expect(addBreak([{ start: '10:00', end: '14:00' }, { start: '17:00', end: '20:00' }])).toEqual([
-      { start: '10:00', end: '14:00' },
-      { start: '17:00', end: '20:00' },
-      { start: '20:00', end: '21:00' },
+  it('starts an hour after a shift that runs late', () => {
+    expect(addHours([{ start: '10:00', end: '18:00' }])).toEqual([
+      { start: '10:00', end: '18:00' },
+      { start: '19:00', end: '22:00' },
     ])
+  })
+
+  it('adds nothing when the day is already over', () => {
+    expect(addHours([{ start: '15:00', end: '23:30' }])).toBeNull()
   })
 })
 

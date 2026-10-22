@@ -172,3 +172,34 @@ it('sends a note for the barber and points to the account when the mobile is mis
   expect(await screen.findByRole('link', { name: 'Πρόσθεσε κινητό' })).toHaveAttribute('href', '/account')
   expect(calls.find((c) => c.key === 'POST /appointments')?.body).toMatchObject({ note: 'Σχέδιο στο πλάι' })
 })
+
+it('marks closed and full days, starts on the first open one and explains a closed day', async () => {
+  const statuses = ['CLOSED', 'FULL', 'OPEN', ...Array(12).fill('OPEN')]
+  const dates = bookableDaysFor(15)
+  mockApi({
+    'GET /barbers/1': () => ({ json: barber }),
+    'GET /barbers/1/services': () => ({ json: services }),
+    'GET /barbers/1/photos': () => ({ json: [] }),
+    [`GET /barbers/1/days?from=${dates[0]}&to=${dates[14]}&serviceId=7`]: () => ({
+      json: dates.map((date, i) => ({ date, status: statuses[i] })),
+    }),
+    [`GET /barbers/1/availability?serviceId=7&date=${dates[2]}`]: () => ({
+      json: { barberId: 1, serviceId: 7, date: dates[2], durationMinutes: 30, startTimes: ['11:00'] },
+    }),
+  })
+  renderApp('/barbers/1')
+  const user = userEvent.setup()
+
+  // Today is closed and tomorrow full, so the first open day is chosen for the customer.
+  expect(await screen.findByRole('button', { name: '11:00' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /Τρί 13, Κλειστά/ })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /Τετ 14, Γεμάτη/ })).toBeInTheDocument()
+
+  await user.click(screen.getByRole('button', { name: /Τρί 13, Κλειστά/ }))
+  expect(await screen.findByText('Κλειστό αυτή τη μέρα. Διάλεξε άλλη μέρα.')).toBeInTheDocument()
+})
+
+// The window this barber offers, as the page builds it: today and 14 more days in Athens.
+function bookableDaysFor(count: number) {
+  return Array.from({ length: count }, (_, i) => new Date(Date.UTC(2026, 9, 13 + i, 12)).toISOString().slice(0, 10))
+}

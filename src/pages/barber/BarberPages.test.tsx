@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { fakeToken, logInAs, mockApi, renderApp } from '../../test/render'
@@ -96,14 +96,19 @@ it('saves a week with a split shift', async () => {
   renderApp('/barber/hours')
   const user = userEvent.setup()
 
-  await user.click(await screen.findByRole('switch', { name: 'Τρίτη: Ανοιχτά' }))
-  await user.click(screen.getByRole('button', { name: '+ Διάλειμμα' }))
+  // A split day: 09:00–14:00, then "+ Προσθήκη ωρών" for the afternoon.
+  const open = await screen.findByRole('switch', { name: 'Τρίτη: Ανοιχτά' })
+  await user.click(open)
+  const tuesday = open.closest('fieldset')!
+  await user.selectOptions(within(tuesday).getByLabelText('Από'), '09:00')
+  await user.selectOptions(within(tuesday).getByLabelText('Έως'), '14:00')
+  await user.click(within(tuesday).getByRole('button', { name: '+ Προσθήκη ωρών' }))
   await user.click(screen.getByRole('button', { name: 'Αποθήκευση ωραρίου' }))
 
   expect(await screen.findByText('Το ωράριο αποθηκεύτηκε.')).toBeInTheDocument()
   expect(calls.find((c) => c.key === 'PUT /barbers/me/working-hours')?.body).toEqual([
-    { dayOfWeek: 'TUESDAY', startTime: '10:00', endTime: '14:00' },
-    { dayOfWeek: 'TUESDAY', startTime: '17:00', endTime: '20:00' },
+    { dayOfWeek: 'TUESDAY', startTime: '09:00', endTime: '14:00' },
+    { dayOfWeek: 'TUESDAY', startTime: '17:00', endTime: '21:00' },
   ])
 })
 

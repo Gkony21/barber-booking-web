@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { logInAs, mockApi, renderApp } from '../../test/render'
@@ -48,6 +48,10 @@ it('lets a barber enter a phone booking, and explains overlaps', async () => {
     'GET /barbers/me/time-off': () => ({ json: [] }),
     'GET /barbers/me/services': () => ({ json: [service] }),
     'GET /barbers/me/working-hours': () => ({ json: [{ dayOfWeek: 'TUESDAY', startTime: '10:00', endTime: '20:00' }] }),
+    // Free times within working hours: 18:00 and 19:30 only.
+    'GET /barbers/me/availability?minutes=30&date=2026-10-13': () => ({
+      json: { barberId: 4, serviceId: null, date: '2026-10-13', durationMinutes: 30, startTimes: ['18:00', '19:30'] },
+    }),
     'POST /barbers/me/appointments': () =>
       ++attempts === 1 ? { status: 409, json: { detail: 'This time overlaps another appointment', code: 'OVERLAPS_APPOINTMENT' } } : { status: 201, json: { id: 1 } },
   })
@@ -55,6 +59,11 @@ it('lets a barber enter a phone booking, and explains overlaps', async () => {
   const user = userEvent.setup()
 
   await user.click(await screen.findByRole('button', { name: '+ Νέο ραντεβού' }))
+  // Only free times within working hours are offered, unless "Εκτός ωραρίου" is on.
+  await vi.waitFor(() => expect(screen.getByLabelText('Ώρα')).toHaveTextContent('18:0019:30'))
+  await user.click(screen.getByLabelText(/Εκτός ωραρίου/))
+  expect(within(screen.getByLabelText('Ώρα')).getByRole('option', { name: '23:00' })).toBeInTheDocument()
+  await user.click(screen.getByLabelText(/Εκτός ωραρίου/))
   await user.selectOptions(screen.getByLabelText('Ώρα'), '18:00')
   await user.type(screen.getByLabelText('Όνομα πελάτη'), 'Κώστας')
   await user.type(screen.getByLabelText('Κινητό (προαιρετικό)'), '6911111111')

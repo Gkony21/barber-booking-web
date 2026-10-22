@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import type { DayStatus } from '../api/types'
 import type { DayOption } from '../lib/format'
 
 /**
@@ -11,11 +12,14 @@ export function DayPicker({
   days,
   selected,
   onSelect,
+  statusOf,
 }: {
   title: ReactNode
   days: DayOption[]
   selected: string
   onSelect: (iso: string) => void
+  /** Marks closed and full days, so customers see them before tapping. */
+  statusOf?: (iso: string) => DayStatus | undefined
 }) {
   const { t } = useTranslation()
   const row = useRef<HTMLDivElement>(null)
@@ -66,16 +70,22 @@ export function DayPicker({
       <div ref={row} className="-mx-5 flex snap-x gap-2 overflow-x-auto scroll-px-5 px-5 pb-1 [scrollbar-width:none]">
         {days.map((d) => {
           const isSelected = d.iso === selected
+          const status = statusOf?.(d.iso)
+          const unavailable = status === 'CLOSED' || status === 'FULL'
+          const note = status === 'CLOSED' ? t('booking.dayClosed') : status === 'FULL' ? t('booking.dayFull') : null
           return (
             <button
               key={d.iso}
               aria-pressed={isSelected}
-              aria-label={`${d.weekday} ${d.day}`}
+              aria-label={note ? `${d.weekday} ${d.day}, ${note}` : `${d.weekday} ${d.day}`}
               onClick={() => onSelect(d.iso)}
-              className={`flex min-h-17 w-14 shrink-0 snap-start flex-col items-center justify-center gap-0.5 rounded-2xl ${isSelected ? 'bg-ink text-ground' : 'bg-surface text-ink hover:bg-surface-2'}`}
+              className={`flex min-h-17 w-14 shrink-0 snap-start flex-col items-center justify-center gap-0.5 rounded-2xl ${
+                isSelected ? 'bg-ink text-ground' : unavailable ? 'bg-surface/50 text-faint' : 'bg-surface text-ink hover:bg-surface-2'
+              }`}
             >
               <span className="text-xs font-semibold uppercase">{d.weekday}</span>
-              <span className="font-display text-2xl font-extrabold">{d.day}</span>
+              <span className={`font-display text-2xl font-extrabold ${unavailable && !isSelected ? 'line-through decoration-2' : ''}`}>{d.day}</span>
+              {note && <span className="-mt-0.5 text-[10px] leading-none font-semibold">{note}</span>}
             </button>
           )
         })}

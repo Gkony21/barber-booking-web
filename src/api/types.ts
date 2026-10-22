@@ -126,6 +126,9 @@ export interface BarberProfileInput {
 }
 
 export type BookingWindow = 14 | 30 | 60
+
+/** OPEN: free times left. FULL: working, nothing left that fits. CLOSED: not working that day. */
+export type DayStatus = 'OPEN' | 'FULL' | 'CLOSED'
 export type MinNotice = 30 | 60 | 120
 export type Buffer = 0 | 5 | 10 | 15
 

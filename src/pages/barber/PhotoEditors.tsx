@@ -6,6 +6,7 @@ import { barberMeApi } from '../../api/endpoints'
 import type { Barber } from '../../api/types'
 import { Avatar } from '../../components/Avatar'
 import { Button } from '../../components/Button'
+import { DefaultCover } from '../../components/DefaultCover'
 import { Notice } from '../../components/States'
 import { errorMessage } from '../../lib/errors'
 import { prepareImage, UnsupportedImageError } from '../../lib/image'
@@ -58,6 +59,72 @@ export function AvatarEditor({ barber }: { barber: Barber }) {
           )}
         </div>
       </div>
+      {(upload.isError || remove.isError) && <Notice tone="error">{describe(upload.error ?? remove.error)}</Notice>}
+    </section>
+  )
+}
+
+/**
+ * The wide image at the top of the barber's page and on their card in the list. Without one,
+ * customers see the FADE default cover, as previewed here.
+ */
+export function CoverEditor({ barber }: { barber: Barber }) {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  const input = useRef<HTMLInputElement>(null)
+  const describe = useUploadError()
+
+  const onDone = (updated: Barber) => queryClient.setQueryData(['barber', 'me'], updated)
+  const upload = useMutation({
+    mutationFn: async (file: File) => barberMeApi.setCover(await prepareImage(file, 1600)),
+    onSuccess: onDone,
+  })
+  const remove = useMutation({ mutationFn: barberMeApi.removeCover, onSuccess: onDone })
+  const busy = upload.isPending || remove.isPending
+
+  return (
+    <section className="flex flex-col gap-2">
+      <h2 className="text-sm font-medium text-muted">{t('barber.photos.cover')}</h2>
+      <div className="relative aspect-[16/9] overflow-hidden rounded-2xl bg-surface-2">
+        {barber.coverUrl ? (
+          <img src={mediaUrl(barber.coverUrl)} alt="" className="size-full object-cover" />
+        ) : (
+          <DefaultCover />
+        )}
+        <input
+          ref={input}
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          aria-label={t('barber.photos.cover')}
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (file) upload.mutate(file)
+            e.target.value = ''
+          }}
+        />
+        <div className="absolute right-3 bottom-3 flex gap-2">
+          {barber.coverUrl && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => remove.mutate()}
+              className="min-h-10 rounded-xl bg-ground/75 px-3 text-sm font-semibold text-ink backdrop-blur"
+            >
+              {t('barber.photos.removeCover')}
+            </button>
+          )}
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => input.current?.click()}
+            className="min-h-10 rounded-xl bg-accent px-3 text-sm font-semibold text-ground"
+          >
+            {busy ? t('common.loading') : barber.coverUrl ? t('barber.photos.changeCover') : t('barber.photos.addCover')}
+          </button>
+        </div>
+      </div>
+      <p className="text-xs text-muted">{barber.coverUrl ? t('barber.photos.coverHint') : t('barber.photos.coverDefaultHint')}</p>
       {(upload.isError || remove.isError) && <Notice tone="error">{describe(upload.error ?? remove.error)}</Notice>}
     </section>
   )

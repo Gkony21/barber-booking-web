@@ -39,15 +39,29 @@ export function NewAppointmentForm({
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [note, setNote] = useState('')
+  // Off: only free times within working hours. On: any quarter hour, e.g. a regular at 23:00.
+  const [anyTime, setAnyTime] = useState(false)
 
   const chosenService = serviceId ?? active[0]?.id ?? null
+  const minutes = (services.data ?? [])
+    .filter((s) => s.id === chosenService || extraIds.includes(s.id))
+    .reduce((sum, s) => sum + s.durationMinutes, 0)
+
+  const free = useQuery({
+    queryKey: ['barber', 'free', date, minutes],
+    queryFn: () => barberMeApi.availability(minutes, date),
+    enabled: chosenService !== null && minutes > 0 && !anyTime,
+  })
+  const options = anyTime ? TIMES : (free.data?.startTimes ?? [])
+  // Keep the chosen time while it is still on offer; otherwise the first one that is.
+  const chosenTime = options.includes(time) ? time : (options[0] ?? '')
 
   const save = useMutation({
     mutationFn: () =>
       barberMeApi.bookManually({
         serviceId: chosenService!,
         extraIds,
-        startTime: `${date}T${time}`,
+        startTime: `${date}T${chosenTime}`,
         customerName: name.trim(),
         customerPhone: phone.trim() || undefined,
         note: note.trim() || undefined,
@@ -60,7 +74,7 @@ export function NewAppointmentForm({
 
   function onSubmit(event: FormEvent) {
     event.preventDefault()
-    if (chosenService && name.trim()) save.mutate()
+    if (chosenService && chosenTime && name.trim()) save.mutate()
   }
 
   if (services.isSuccess && active.length === 0) {
@@ -115,8 +129,8 @@ export function NewAppointmentForm({
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-muted">
           {t('barber.schedule.time')}
-          <select value={time} onChange={(e) => setTime(e.target.value)} className={selectClass}>
-            {TIMES.map((slot) => (
+          <select value={chosenTime} onChange={(e) => setTime(e.target.value)} disabled={options.length === 0} className={selectClass}>
+            {options.map((slot) => (
               <option key={slot} value={slot}>
                 {slot}
               </option>
@@ -124,6 +138,16 @@ export function NewAppointmentForm({
           </select>
         </label>
       </div>
+      {!anyTime && free.isSuccess && options.length === 0 && (
+        <p className="-mt-2 text-sm text-muted">{t('barber.schedule.noFreeTimes')}</p>
+      )}
+      <label className="-mt-1 flex min-h-11 cursor-pointer items-center gap-3 text-sm">
+        <input type="checkbox" checked={anyTime} onChange={(e) => setAnyTime(e.target.checked)} className="size-5 accent-accent" />
+        <span className="flex flex-col">
+          <span className="font-semibold text-ink">{t('barber.schedule.anyTime')}</span>
+          <span className="text-muted">{t('barber.schedule.anyTimeHint')}</span>
+        </span>
+      </label>
 
       <TextField onSurface label={t('barber.schedule.customerName')} required maxLength={100} value={name} onChange={(e) => setName(e.target.value)} />
       <TextField onSurface label={t('barber.schedule.customerPhone')} type="tel" maxLength={30} value={phone} onChange={(e) => setPhone(e.target.value)} />
@@ -136,7 +160,7 @@ export function NewAppointmentForm({
       )}
 
       <div className="flex gap-2">
-        <Button type="submit" className="flex-1" disabled={!name.trim() || !chosenService || save.isPending}>
+        <Button type="submit" className="flex-1" disabled={!name.trim() || !chosenService || !chosenTime || save.isPending}>
           {t('barber.schedule.save')}
         </Button>
         <Button type="button" variant="tonal" onClick={() => onDone(false)}>

@@ -7,6 +7,7 @@ import type {
   Photo,
   BarberProfileInput,
   BarberStatus,
+  DayStatus,
   Role,
   Shop,
   ShopInput,
@@ -49,6 +50,16 @@ export const barbersApi = {
   byLink: (slug: string) => api<Barber>(`/barbers/by-link/${encodeURIComponent(slug)}`),
   services: (id: number) => api<ServiceOffering[]>(`/barbers/${id}/services`),
   photos: (id: number) => api<Photo[]>(`/barbers/${id}/photos`),
+  /** Open, full or closed for each day, for the chosen services (or a length, when moving). */
+  days: (id: number, selection: { serviceId: number; extraIds: number[] } | { minutes: number }, from: string, to: string) => {
+    const params = new URLSearchParams({ from, to })
+    if ('minutes' in selection) params.set('minutes', String(selection.minutes))
+    else {
+      params.set('serviceId', String(selection.serviceId))
+      if (selection.extraIds.length) params.set('extraIds', selection.extraIds.join(','))
+    }
+    return api<{ date: string; status: DayStatus }[]>(`/barbers/${id}/days?${params}`)
+  },
   /** Free starts for an appointment of a given length (when moving one). */
   availabilityFor: (id: number, minutes: number, date: string) =>
     api<Availability>(`/barbers/${id}/availability?minutes=${minutes}&date=${date}`),
@@ -73,6 +84,9 @@ export const barberMeApi = {
   createProfile: (body: BarberProfileInput) => api<Barber>('/barbers/me', { method: 'POST', body }),
   updateProfile: (body: BarberProfileInput) => api<Barber>('/barbers/me', { method: 'PUT', body }),
 
+  /** Free quarter hours within working hours, for entering a booking by hand. */
+  availability: (minutes: number, date: string) =>
+    api<Availability>(`/barbers/me/availability?minutes=${minutes}&date=${date}`),
   bookManually: (body: {
     serviceId: number
     extraIds: number[]
@@ -102,6 +116,8 @@ export const barberMeApi = {
 
   setAvatar: (image: Blob) => api<Barber>('/barbers/me/avatar', { method: 'PUT', body: fileForm(image) }),
   removeAvatar: () => api<Barber>('/barbers/me/avatar', { method: 'DELETE' }),
+  setCover: (image: Blob) => api<Barber>('/barbers/me/cover', { method: 'PUT', body: fileForm(image) }),
+  removeCover: () => api<Barber>('/barbers/me/cover', { method: 'DELETE' }),
   photos: () => api<Photo[]>('/barbers/me/photos'),
   addPhoto: (image: Blob) => api<Photo>('/barbers/me/photos', { method: 'POST', body: fileForm(image) }),
   deletePhoto: (id: number) => api<void>(`/barbers/me/photos/${id}`, { method: 'DELETE' }),

@@ -8,7 +8,7 @@ import { ErrorState, Loading, Notice } from '../../components/States'
 import { TextField } from '../../components/TextField'
 import { errorMessage } from '../../lib/errors'
 import { bookableDays, formatShortDate } from '../../lib/format'
-import { addBreak, isValidWeek, WEEK, type Shift, type Week } from './week'
+import { addHours, isValidWeek, WEEK, type Shift, type Week } from './week'
 
 export function BarberHoursPage() {
   const { t } = useTranslation()
@@ -106,14 +106,17 @@ function WeekEditor({ initial }: { initial: Week }) {
               </div>
             ))}
 
-            {open && shifts.length < 3 && (
-              <button
-                type="button"
-                onClick={() => update(day, addBreak(shifts))}
-                className="min-h-11 self-start text-sm font-semibold text-accent"
-              >
-                {t('barber.hours.addBreak')}
-              </button>
+            {open && shifts.length < 3 && addHours(shifts) && (
+              <div className="flex flex-col">
+                <button
+                  type="button"
+                  onClick={() => update(day, addHours(shifts)!)}
+                  className="min-h-11 self-start text-sm font-semibold text-accent"
+                >
+                  {t('barber.hours.addHours')}
+                </button>
+                {shifts.length === 1 && <span className="text-xs text-muted">{t('barber.hours.addHoursHint')}</span>}
+              </div>
             )}
           </fieldset>
         )
