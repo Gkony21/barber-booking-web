@@ -3,12 +3,15 @@ import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import type { Appointment, Barber } from '../api/types'
 import { buildIcs, directionsUrl, downloadIcs } from '../lib/calendar'
-import { athensDate, formatDayHeading, formatPrice, formatTime, servicesOf } from '../lib/format'
+import { athensDate, formatAppointmentTime, formatDayHeading, formatPrice, formatTime, servicesOf } from '../lib/format'
 
 /** The booking confirmation, laid out like a ticket. */
 export function BookingTicket({ appointment, barber }: { appointment: Appointment; barber: Barber }) {
   const { t } = useTranslation()
   const confirmed = appointment.status === 'CONFIRMED'
+  // A confirmed appointment asked to move: the new time waits for the barber, the current one holds.
+  const change = appointment.requestedStartTime ?? null
+  const shownTime = change ?? appointment.startTime
   const where = [barber.shopName, barber.address, barber.city].filter(Boolean)
   const address = where.join(', ')
   const ticket = useRef<HTMLElement>(null)
@@ -49,10 +52,10 @@ export function BookingTicket({ appointment, barber }: { appointment: Appointmen
 
         <div className="flex flex-col gap-1 px-[22px] pt-[22px] pb-[18px]">
           <span className="font-display text-[22px] font-extrabold text-accent uppercase">
-            {confirmed ? t('booking.ticketBooked') : t('booking.ticketRequested')}
+            {change ? t('booking.ticketChangeRequested') : confirmed ? t('booking.ticketBooked') : t('booking.ticketRequested')}
           </span>
-          <span className="font-display text-[84px] leading-[0.9] font-extrabold tracking-tight">{formatTime(appointment.startTime)}</span>
-          <span className="text-[17px] font-semibold first-letter:uppercase">{formatDayHeading(athensDate(appointment.startTime))}</span>
+          <span className="font-display text-[84px] leading-[0.9] font-extrabold tracking-tight">{formatTime(shownTime)}</span>
+          <span className="text-[17px] font-semibold first-letter:uppercase">{formatDayHeading(athensDate(shownTime))}</span>
         </div>
 
         <div aria-hidden="true" className="relative flex h-6 items-center">
@@ -82,17 +85,20 @@ export function BookingTicket({ appointment, barber }: { appointment: Appointmen
       </article>
 
       <div className="grid grid-cols-2 gap-2.5">
-        <button
-          type="button"
-          onClick={addToCalendar}
-          className="flex min-h-[54px] items-center justify-center gap-2 rounded-2xl bg-accent font-bold text-ground hover:bg-accent-strong"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <rect x="3" y="4" width="18" height="18" rx="3" />
-            <path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4" />
-          </svg>
-          {t('booking.addToCalendar')}
-        </button>
+        {/* Not for a change yet to be answered: the calendar would get a time that may not hold. */}
+        {!change && (
+          <button
+            type="button"
+            onClick={addToCalendar}
+            className="flex min-h-[54px] items-center justify-center gap-2 rounded-2xl bg-accent font-bold text-ground hover:bg-accent-strong"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="18" rx="3" />
+              <path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4" />
+            </svg>
+            {t('booking.addToCalendar')}
+          </button>
+        )}
         {address ? (
           <a
             href={directionsUrl(address)}
@@ -110,7 +116,13 @@ export function BookingTicket({ appointment, barber }: { appointment: Appointmen
         )}
       </div>
 
-      <p className="text-center text-sm text-muted">{confirmed ? t('booking.ticketNote') : t('booking.pendingBody')}</p>
+      <p className="text-center text-sm text-muted">
+        {change
+          ? t('booking.changeBody', { when: formatAppointmentTime(appointment.startTime) })
+          : confirmed
+            ? t('booking.ticketNote')
+            : t('booking.pendingBody')}
+      </p>
       <Link to="/appointments" className="flex min-h-11 items-center justify-center font-semibold text-accent">
         {t('booking.seeAppointments')}
       </Link>

@@ -8,7 +8,7 @@ import { Button } from '../../components/Button'
 import { ErrorState, Loading, Notice } from '../../components/States'
 import { TextField } from '../../components/TextField'
 import { errorMessage } from '../../lib/errors'
-import { athensDate, bookableDays, formatDayHeading, formatPrice, formatTime, servicesOf } from '../../lib/format'
+import { athensDate, bookableDays, formatAppointmentTime, formatDayHeading, formatPrice, formatTime, servicesOf } from '../../lib/format'
 import { byDay, dayOfWeek, isOff, monthGrid, planDay } from './calendar'
 import { NewAppointmentForm } from './NewAppointmentForm'
 import { ProfileForm } from './ProfileForm'
@@ -320,6 +320,8 @@ function AppointmentRow({ appointment, dayLabel }: { appointment: Appointment; d
   const queryClient = useQueryClient()
   const pending = appointment.status === 'PENDING'
   const noShow = appointment.status === 'NO_SHOW'
+  // A customer asking to move a confirmed appointment: this request holds the new time.
+  const isChange = Boolean(appointment.originalStartTime)
   // Once it has started, a no-show can be marked instead of cancelling.
   const started = new Date(appointment.startTime).getTime() <= Date.now()
 
@@ -329,7 +331,8 @@ function AppointmentRow({ appointment, dayLabel }: { appointment: Appointment; d
   })
 
   const run = (kind: 'confirm' | 'reject' | 'cancel' | 'noShow') => {
-    if (kind === 'reject' && !window.confirm(t('barber.schedule.confirmReject'))) return
+    if (kind === 'reject' && !window.confirm(t(isChange ? 'barber.schedule.confirmRejectChange' : 'barber.schedule.confirmReject')))
+      return
     if (kind === 'cancel' && !window.confirm(t('barber.schedule.confirmCancel'))) return
     if (kind === 'noShow' && !window.confirm(t('barber.schedule.confirmNoShow'))) return
     action.mutate(kind)
@@ -351,6 +354,11 @@ function AppointmentRow({ appointment, dayLabel }: { appointment: Appointment; d
                 {t('barber.schedule.manualBadge')}
               </span>
             )}
+            {isChange && (
+              <span className="shrink-0 rounded-md bg-accent/20 px-1.5 py-0.5 text-[11px] font-semibold text-accent">
+                {t('barber.schedule.changeBadge')}
+              </span>
+            )}
             {noShow && (
               <span className="shrink-0 rounded-md bg-danger/20 px-1.5 py-0.5 text-[11px] font-semibold text-danger">
                 {t('barber.schedule.noShowBadge')}
@@ -365,6 +373,16 @@ function AppointmentRow({ appointment, dayLabel }: { appointment: Appointment; d
           <span className="text-sm text-muted">
             {servicesOf(appointment)} · {formatPrice(appointment.price)}
           </span>
+          {appointment.originalStartTime && (
+            <span className="text-sm font-semibold text-accent">
+              {t('barber.schedule.changeFrom', { when: formatAppointmentTime(appointment.originalStartTime) })}
+            </span>
+          )}
+          {appointment.requestedStartTime && (
+            <span className="text-sm font-semibold text-accent">
+              {t('barber.schedule.changeAskedFor', { when: formatAppointmentTime(appointment.requestedStartTime) })}
+            </span>
+          )}
           {appointment.note && <span className="text-sm text-muted italic">“{appointment.note}”</span>}
         </div>
         {appointment.customerPhone && (

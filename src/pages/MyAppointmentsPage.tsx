@@ -72,6 +72,11 @@ function AppointmentCard({ appointment, cancellable = false }: { appointment: Ap
     mutationFn: () => appointmentsApi.cancel(appointment.id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['appointments'] }),
   })
+  const withdraw = useMutation({
+    mutationFn: () => appointmentsApi.withdrawChange(appointment.id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['appointments'] }),
+  })
+  const change = cancellable ? appointment.requestedStartTime : null
 
   return (
     <article className="flex flex-col gap-3 rounded-2xl bg-surface p-4">
@@ -88,9 +93,30 @@ function AppointmentCard({ appointment, cancellable = false }: { appointment: Ap
       </div>
       <p className="font-semibold first-letter:uppercase">{formatAppointmentTime(appointment.startTime)}</p>
 
-      {cancel.isError && (
+      {/* Asked to move; until the barber answers, the time above holds. */}
+      {change && (
+        <div className="flex flex-col gap-2 rounded-xl border-2 border-dashed border-accent/60 p-3">
+          <p className="text-sm">
+            <span className="font-semibold text-accent">{t('appointments.changeRequested', { when: formatAppointmentTime(change) })}</span>
+            <br />
+            <span className="text-muted">{t('appointments.changeWaiting')}</span>
+          </p>
+          <Button
+            variant="ghost"
+            className="min-h-11 self-start px-3 text-sm"
+            disabled={withdraw.isPending}
+            onClick={() => {
+              if (window.confirm(t('appointments.confirmWithdraw'))) withdraw.mutate()
+            }}
+          >
+            {t('appointments.withdrawChange')}
+          </Button>
+        </div>
+      )}
+
+      {(cancel.isError || withdraw.isError) && (
         <Notice tone="error">
-          {errorMessage(cancel.error, t)}
+          {errorMessage(cancel.error ?? withdraw.error, t)}
         </Notice>
       )}
       {cancellable && (

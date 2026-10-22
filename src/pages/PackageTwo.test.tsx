@@ -6,7 +6,7 @@ import { logInAs, mockApi, renderApp } from '../test/render'
 const barber = {
   id: 1, slug: 'nick', name: 'Barber Nick', avatarUrl: null, bio: null, experienceYears: null, specialty: null, address: null,
   city: 'Αθήνα', status: 'APPROVED', autoConfirmBookings: true, slotStepMinutes: 30, bookingWindowDays: 14, minNoticeMinutes: 60,
-  bufferMinutes: 0, shopId: null, shopName: null, shopAddress: null, shopCity: null, coverUrl: null, photoCount: 0, fromPrice: 12,
+  bufferMinutes: 0, shopId: null, shopName: null, shopAddress: null, shopCity: null, coverUrl: null, photoCount: 0, featuredServiceName: 'Κούρεμα', featuredPrice: 12,
   nextAvailable: null,
 }
 const appointment = {
@@ -32,7 +32,8 @@ it('moves an appointment to a new time, keeping its services', async () => {
     'GET /barbers/1': () => ({ json: barber }),
     'GET /barbers/1/services': () => ({ json: [] }),
     'GET /barbers/1/photos': () => ({ json: [] }),
-    'GET /barbers/1/availability?minutes=45&date=2026-10-13': () => ({
+    'GET /appointments/34/days?from=2026-10-13&to=2026-10-27': () => ({ json: [{ date: '2026-10-13', status: 'OPEN' }] }),
+    'GET /appointments/34/availability?date=2026-10-13': () => ({
       json: { barberId: 1, serviceId: null, date: '2026-10-13', durationMinutes: 45, startTimes: ['17:00'] },
     }),
     'POST /appointments/34/reschedule': () => ({ json: { ...appointment, startTime: '2026-10-13T17:00:00+03:00', endTime: '2026-10-13T17:45:00+03:00' } }),
@@ -45,7 +46,7 @@ it('moves an appointment to a new time, keeping its services', async () => {
   // The services stay; only day and time are chosen.
   expect(await screen.findByRole('heading', { name: 'Αλλαγή ώρας' })).toBeInTheDocument()
   expect(screen.getByText('Κούρεμα + Λούσιμο')).toBeInTheDocument()
-  expect(screen.queryByRole('heading', { name: 'Τιμοκατάλογος' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: 'Ποια υπηρεσία;' })).not.toBeInTheDocument()
 
   await user.click(await screen.findByRole('button', { name: '17:00' }))
   await user.click(screen.getByRole('button', { name: /Μετακίνηση σε Τρί 13 · 17:00/ }))

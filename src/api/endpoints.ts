@@ -50,19 +50,12 @@ export const barbersApi = {
   byLink: (slug: string) => api<Barber>(`/barbers/by-link/${encodeURIComponent(slug)}`),
   services: (id: number) => api<ServiceOffering[]>(`/barbers/${id}/services`),
   photos: (id: number) => api<Photo[]>(`/barbers/${id}/photos`),
-  /** Open, full or closed for each day, for the chosen services (or a length, when moving). */
-  days: (id: number, selection: { serviceId: number; extraIds: number[] } | { minutes: number }, from: string, to: string) => {
-    const params = new URLSearchParams({ from, to })
-    if ('minutes' in selection) params.set('minutes', String(selection.minutes))
-    else {
-      params.set('serviceId', String(selection.serviceId))
-      if (selection.extraIds.length) params.set('extraIds', selection.extraIds.join(','))
-    }
+  /** Open, full or closed for each day, for the chosen services. */
+  days: (id: number, serviceId: number, extraIds: number[], from: string, to: string) => {
+    const params = new URLSearchParams({ from, to, serviceId: String(serviceId) })
+    if (extraIds.length) params.set('extraIds', extraIds.join(','))
     return api<{ date: string; status: DayStatus }[]>(`/barbers/${id}/days?${params}`)
   },
-  /** Free starts for an appointment of a given length (when moving one). */
-  availabilityFor: (id: number, minutes: number, date: string) =>
-    api<Availability>(`/barbers/${id}/availability?minutes=${minutes}&date=${date}`),
   availability: (id: number, serviceId: number, extraIds: number[], date: string) =>
     api<Availability>(
       `/barbers/${id}/availability?serviceId=${serviceId}${extraIds.length ? `&extraIds=${extraIds.join(',')}` : ''}&date=${date}`,
@@ -74,8 +67,18 @@ export const appointmentsApi = {
     api<Appointment>('/appointments', { method: 'POST', body }),
   mine: () => api<Appointment[]>('/appointments/me'),
   cancel: (id: number) => api<Appointment>(`/appointments/${id}/cancel`, { method: 'POST' }),
+  /**
+   * Picks a new time. A confirmed appointment of a barber who approves by hand keeps its time and
+   * comes back with requestedStartTime until the barber answers.
+   */
   reschedule: (id: number, startTime: string) =>
     api<Appointment>(`/appointments/${id}/reschedule`, { method: 'POST', body: { startTime } }),
+  /** Takes back a change of time the barber has not answered; the appointment keeps its time. */
+  withdrawChange: (id: number) => api<Appointment>(`/appointments/${id}/withdraw-change`, { method: 'POST' }),
+  /** Days and free starts for moving this appointment; its own time counts as free. */
+  moveDays: (id: number, from: string, to: string) =>
+    api<{ date: string; status: DayStatus }[]>(`/appointments/${id}/days?from=${from}&to=${to}`),
+  moveAvailability: (id: number, date: string) => api<Availability>(`/appointments/${id}/availability?date=${date}`),
 }
 
 /** Endpoints for the logged-in barber's own profile, schedule and bookings. */
@@ -107,6 +110,8 @@ export const barberMeApi = {
   updateService: (id: number, body: ServiceInput) =>
     api<ServiceOffering>(`/barbers/me/services/${id}`, { method: 'PUT', body }),
   hideService: (id: number) => api<void>(`/barbers/me/services/${id}/hide`, { method: 'POST' }),
+  /** Shows this main service with its price on the barber's card in the list. */
+  featureService: (id: number) => api<void>(`/barbers/me/services/${id}/feature`, { method: 'POST' }),
   /** Gone for good; appointments already booked keep their details. */
   deleteService: (id: number) => api<void>(`/barbers/me/services/${id}`, { method: 'DELETE' }),
 

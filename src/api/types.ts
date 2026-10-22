@@ -32,7 +32,9 @@ export interface Barber {
   shopCity: string | null
   coverUrl: string | null
   photoCount: number
-  fromPrice: number | null
+  /** The service shown with its price on the card: the barber's pick, or their first main service. */
+  featuredServiceName: string | null
+  featuredPrice: number | null
   /** ISO time with offset of the first free start, or null when nothing is free in the booking window. */
   nextAvailable: string | null
 }
@@ -45,6 +47,8 @@ export interface ServiceOffering {
   price: number
   kind: ServiceKind
   active: boolean
+  /** Shown with its price on the barber's card in the list. */
+  featured: boolean
 }
 
 /** MAIN: a service or package, the customer picks one. EXTRA: added on top, any number. */
@@ -80,6 +84,10 @@ export interface Appointment {
   note: string | null
   /** For the barber: how many times this customer did not turn up. */
   customerNoShows?: number
+  /** A confirmed appointment the customer asked to move: the time asked for, until the barber answers. */
+  requestedStartTime?: string | null
+  /** On that request itself (barber's schedule): the confirmed time it would replace. */
+  originalStartTime?: string | null
 }
 
 export interface User {

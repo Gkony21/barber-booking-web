@@ -7,7 +7,7 @@ const barber = {
   id: 4, slug: 'nikos', name: 'Νίκος', avatarUrl: null, coverUrl: null, bio: null, experienceYears: null, specialty: null,
   address: null, city: 'Αθήνα', status: 'PENDING', autoConfirmBookings: true, slotStepMinutes: 30, bookingWindowDays: 14,
   minNoticeMinutes: 60, bufferMinutes: 0, shopId: null, shopName: null, shopAddress: null, shopCity: null, photoCount: 0,
-  fromPrice: null, nextAvailable: null, latitude: null, longitude: null,
+  featuredServiceName: null, featuredPrice: null, nextAvailable: null, latitude: null, longitude: null,
 }
 
 it('shows the default cover until the barber uploads their own', async () => {
