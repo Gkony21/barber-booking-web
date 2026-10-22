@@ -138,9 +138,11 @@ function BarberCard({ barber }: { barber: Barber }) {
           <span className="truncate font-display text-[26px] leading-none font-extrabold uppercase">{barber.name}</span>
           {place && <span className="truncate text-[13px] text-muted">{place}</span>}
         </span>
-        {barber.fromPrice !== null && barber.fromPrice > 0 && (
-          <span className="text-[13px] whitespace-nowrap text-muted">
-            {t('barbers.from')} <strong className="font-display text-xl text-ink">{formatPrice(barber.fromPrice)}</strong>
+        {/* The barber's usual service, not the cheapest one (a kids' cut would mislead). */}
+        {barber.featuredServiceName && barber.featuredPrice !== null && (
+          <span className="flex max-w-32 shrink-0 flex-col items-end leading-tight">
+            <span className="max-w-full truncate text-[13px] text-muted">{barber.featuredServiceName}</span>
+            <strong className="font-display text-xl text-ink">{formatPrice(barber.featuredPrice)}</strong>
           </span>
         )}
       </div>

@@ -7,8 +7,8 @@ const base = {
   avatarUrl: null, bio: null, experienceYears: null, specialty: null, status: 'APPROVED', autoConfirmBookings: true,
   slotStepMinutes: 30, shopId: null, shopName: null, shopAddress: null, shopCity: null, bookingWindowDays: 14, latitude: null, longitude: null,
 }
-const nikos = { ...base, id: 1, name: 'Nikos', address: 'Ερμού 12', city: 'Αθήνα', coverUrl: '/media/c.jpg', photoCount: 14, fromPrice: 8, nextAvailable: '2026-10-13T17:30:00+03:00' }
-const giorgos = { ...base, id: 2, name: 'Giorgos', address: null, city: 'Σπάρτη', coverUrl: null, photoCount: 0, fromPrice: 14, nextAvailable: '2026-10-14T10:00:00+03:00' }
+const nikos = { ...base, id: 1, name: 'Nikos', address: 'Ερμού 12', city: 'Αθήνα', coverUrl: '/media/c.jpg', photoCount: 14, featuredServiceName: 'Κούρεμα', featuredPrice: 12, nextAvailable: '2026-10-13T17:30:00+03:00' }
+const giorgos = { ...base, id: 2, name: 'Giorgos', address: null, city: 'Σπάρτη', coverUrl: null, photoCount: 0, featuredServiceName: 'Κούρεμα + μούσι', featuredPrice: 15, nextAvailable: '2026-10-14T10:00:00+03:00' }
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] })
@@ -19,15 +19,17 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-it('shows each barber with cover, next free time, photo count and starting price', async () => {
+it('shows each barber with cover, next free time, photo count and their usual service with its price', async () => {
   mockApi({ 'GET /barbers': () => ({ json: [nikos, giorgos] }) })
   renderApp('/')
 
   const cards = await screen.findAllByRole('link', { name: /Nikos|Giorgos/ })
   expect(within(cards[0]).getByText('Ελεύθερο 17:30')).toBeInTheDocument()
   expect(within(cards[0]).getByText('14 φωτογραφίες')).toBeInTheDocument()
-  expect(within(cards[0]).getByText('8,00 €')).toBeInTheDocument()
+  expect(within(cards[0]).getByText('Κούρεμα')).toBeInTheDocument()
+  expect(within(cards[0]).getByText('12,00 €')).toBeInTheDocument()
   expect(within(cards[1]).getByText('Αύριο 10:00')).toBeInTheDocument()
+  expect(within(cards[1]).getByText('Κούρεμα + μούσι')).toBeInTheDocument()
 })
 
 it('filters to barbers free today', async () => {

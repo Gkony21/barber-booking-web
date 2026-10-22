@@ -6,7 +6,7 @@ import { logInAs, mockApi, renderApp } from '../../test/render'
 const barber = {
   id: 4, slug: 'nikos', name: 'Νίκος', avatarUrl: null, bio: null, experienceYears: null, specialty: null, address: null,
   city: 'Αθήνα', status: 'APPROVED', autoConfirmBookings: true, slotStepMinutes: 30, shopId: null, shopName: null,
-  shopAddress: null, shopCity: null, bookingWindowDays: 14, coverUrl: null, photoCount: 0, fromPrice: null,
+  shopAddress: null, shopCity: null, bookingWindowDays: 14, coverUrl: null, photoCount: 0, featuredServiceName: null, featuredPrice: null,
   nextAvailable: null, latitude: null, longitude: null,
 }
 const invitation = {

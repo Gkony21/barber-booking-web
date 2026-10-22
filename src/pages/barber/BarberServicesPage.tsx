@@ -58,6 +58,7 @@ function ServiceGroup({
       <div className="flex flex-col gap-1">
         <h2 className="font-display text-2xl font-extrabold uppercase">{main ? t('barber.services.mainTitle') : t('barber.services.extrasTitle')}</h2>
         <p className="text-sm leading-relaxed text-muted">{main ? t('barber.services.mainHint') : t('barber.services.extrasHint')}</p>
+        {main && <p className="text-sm leading-relaxed text-muted">{t('barber.services.featuredHint')}</p>}
       </div>
 
       {services.length === 0 && editing !== kind && (
@@ -94,6 +95,7 @@ function ServiceRow({ service, onEdit }: { service: ServiceOffering; onEdit: () 
 
   const deactivate = useMutation({ mutationFn: () => barberMeApi.hideService(service.id), onSuccess: refresh })
   const remove = useMutation({ mutationFn: () => barberMeApi.deleteService(service.id), onSuccess: refresh })
+  const feature = useMutation({ mutationFn: () => barberMeApi.featureService(service.id), onSuccess: refresh })
   // Saving a service makes it visible again, so "restore" re-sends its current details.
   const reactivate = useMutation({
     mutationFn: () =>
@@ -114,14 +116,28 @@ function ServiceRow({ service, onEdit }: { service: ServiceOffering; onEdit: () 
           <span className="font-semibold">
             {service.name}
             {!service.active && <span className="ml-2 rounded-md bg-surface-2 px-2 py-0.5 text-xs text-muted">{t('barber.services.hidden')}</span>}
+            {service.featured && (
+              <span className="ml-2 rounded-md bg-accent/20 px-2 py-0.5 text-xs whitespace-nowrap text-accent">{t('barber.services.featured')}</span>
+            )}
+            {/* Where the badge would be, so it is clear what choosing it does. */}
+            {service.kind === 'MAIN' && service.active && !service.featured && (
+              <button
+                type="button"
+                className="ml-2 rounded-md border border-line px-2 py-0.5 text-xs whitespace-nowrap text-muted hover:border-accent hover:text-accent disabled:opacity-50"
+                disabled={feature.isPending}
+                onClick={() => feature.mutate()}
+              >
+                {t('barber.services.feature')}
+              </button>
+            )}
           </span>
           <span className="text-sm text-muted">{t('common.minutes', { count: service.durationMinutes })}</span>
           {service.description && <span className="text-sm text-muted">{service.description}</span>}
         </div>
         <span className="font-display text-2xl font-extrabold">{formatServicePrice(service.price, t)}</span>
       </div>
-      {remove.isError && <Notice tone="error">{errorMessage(remove.error, t)}</Notice>}
-      <div className="flex justify-end gap-2">
+      {(remove.isError || feature.isError) && <Notice tone="error">{errorMessage(remove.error ?? feature.error, t)}</Notice>}
+      <div className="flex justify-end gap-1">
         {/* A plain button: the ghost variant's text colour would override the danger colour. */}
         <button
           type="button"
@@ -131,20 +147,20 @@ function ServiceRow({ service, onEdit }: { service: ServiceOffering; onEdit: () 
         >
           {t('barber.services.delete')}
         </button>
-        <Button variant="ghost" className="min-h-11 px-3 text-sm" onClick={onEdit}>
+        <Button variant="ghost" className="min-h-11 px-2.5 text-sm" onClick={onEdit}>
           {t('barber.services.edit')}
         </Button>
         {service.active ? (
           <Button
             variant="ghost"
-            className="min-h-11 px-3 text-sm"
+            className="min-h-11 px-2.5 text-sm"
             disabled={deactivate.isPending}
             onClick={() => window.confirm(t('barber.services.confirmDeactivate')) && deactivate.mutate()}
           >
             {t('barber.services.deactivate')}
           </Button>
         ) : (
-          <Button variant="tonal" className="min-h-11 px-3 text-sm" disabled={reactivate.isPending} onClick={() => reactivate.mutate()}>
+          <Button variant="tonal" className="min-h-11 px-2.5 text-sm" disabled={reactivate.isPending} onClick={() => reactivate.mutate()}>
             {t('barber.services.reactivate')}
           </Button>
         )}

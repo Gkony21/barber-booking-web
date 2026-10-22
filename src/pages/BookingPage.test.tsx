@@ -48,7 +48,9 @@ it('books the chosen service, day and time', async () => {
   const user = userEvent.setup()
 
   expect(await screen.findByRole('heading', { name: 'Barber Nick' })).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: /Κούρεμα.*12,00.*30 λεπτά/ })).toHaveAttribute('aria-pressed', 'true')
+  // One circle per service, so it reads as a choice; the first is picked to start with.
+  expect(screen.getByRole('radiogroup', { name: 'Ποια υπηρεσία;' })).toBeInTheDocument()
+  expect(screen.getByRole('radio', { name: /Κούρεμα.*12,00.*30 λεπτά/ })).toBeChecked()
 
   await user.click(await screen.findByRole('button', { name: '18:00' }))
   await user.click(screen.getByRole('button', { name: /Κλείσε Τρί 13 · 18:00/ }))

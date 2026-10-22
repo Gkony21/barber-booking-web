@@ -126,7 +126,8 @@ function BookingForm({ barber, services, moving }: { barber: Barber; services: S
 
   const mains = services.filter((s) => s.kind === 'MAIN')
   const extras = services.filter((s) => s.kind === 'EXTRA')
-  const [serviceId, setServiceId] = useState(mains[0]?.id ?? 0)
+  // Starts on the service the barber shows on their card, usually the plain haircut.
+  const [serviceId, setServiceId] = useState((mains.find((s) => s.featured) ?? mains[0])?.id ?? 0)
   const [extraIds, setExtraIds] = useState<number[]>([])
   const [note, setNote] = useState('')
   // The day the customer tapped; until then, the first day with free times.
@@ -141,12 +142,9 @@ function BookingForm({ barber, services, moving }: { barber: Barber; services: S
   const dayStatuses = useQuery({
     queryKey: moving ? ['days', barber.id, 'move', moving.id] : ['days', barber.id, serviceId, extraIds],
     queryFn: () =>
-      barbersApi.days(
-        barber.id,
-        moving ? { minutes: moving.durationMinutes } : { serviceId, extraIds },
-        days[0].iso,
-        days[days.length - 1].iso,
-      ),
+      moving
+        ? appointmentsApi.moveDays(moving.id, days[0].iso, days[days.length - 1].iso)
+        : barbersApi.days(barber.id, serviceId, extraIds, days[0].iso, days[days.length - 1].iso),
   })
   const statusOf = (iso: string) => dayStatuses.data?.find((d) => d.date === iso)?.status
   const firstOpen = dayStatuses.data?.find((d) => d.status === 'OPEN')?.date
@@ -158,7 +156,7 @@ function BookingForm({ barber, services, moving }: { barber: Barber; services: S
     queryKey: moving ? ['availability', barber.id, 'move', moving.id, date] : ['availability', barber.id, serviceId, extraIds, date],
     queryFn: () =>
       moving
-        ? barbersApi.availabilityFor(barber.id, moving.durationMinutes, date)
+        ? appointmentsApi.moveAvailability(moving.id, date)
         : barbersApi.availability(barber.id, serviceId, extraIds, date),
     // Wait for the day statuses, so the first request is already for the day shown; skip closed days.
     enabled: (pickedDate !== null || !dayStatuses.isPending) && !closed,
@@ -201,27 +199,40 @@ function BookingForm({ barber, services, moving }: { barber: Barber; services: S
         </section>
       )}
 
-      {/* Read like the price board on a barbershop wall: name, dotted leader, price. */}
+      {/* Read like the price board on a barbershop wall: name, dotted leader, price. The empty circle on
+          every line shows it can be picked; one is filled. */}
       {!moving && (
-        <section className="flex flex-col gap-1">
-          <h2 className="mb-2 font-display text-[26px] font-extrabold uppercase">{t('booking.stepService')}</h2>
+        <section role="radiogroup" aria-labelledby="step-service" className="flex flex-col gap-1">
+          <h2 id="step-service" className="mb-2 font-display text-[26px] font-extrabold uppercase">
+            {t('booking.stepService')}
+          </h2>
           {mains.map((s) => {
             const selected = s.id === serviceId
             return (
               <button
                 key={s.id}
-                aria-pressed={selected}
+                role="radio"
+                aria-checked={selected}
                 onClick={() => choose(() => setServiceId(s.id))}
-                className={`flex min-h-14 flex-col gap-0.5 py-3 text-left ${selected ? 'text-accent' : 'text-ink'}`}
+                className={`flex min-h-14 items-start gap-3 py-3 text-left ${selected ? 'text-accent' : 'text-ink'}`}
               >
-                <span className="flex w-full items-baseline gap-2">
-                  <span aria-hidden="true" className={`size-2 shrink-0 self-center rounded-full ${selected ? 'bg-accent' : 'bg-transparent'}`} />
-                  <span className="text-[17px] font-semibold">{s.name}</span>
-                  <span aria-hidden="true" className="min-w-6 flex-1 -translate-y-1 border-b-2 border-dotted border-line" />
-                  <span className="font-display text-[22px] font-extrabold">{formatPrice(s.price)}</span>
+                <span
+                  aria-hidden="true"
+                  className={`mt-1 flex size-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                    selected ? 'border-accent' : 'border-faint'
+                  }`}
+                >
+                  {selected && <span className="size-2.5 rounded-full bg-accent" />}
                 </span>
-                {s.description && <span className="pl-4 text-[13px] leading-snug text-ink/75">{s.description}</span>}
-                <span className="pl-4 text-[13px] text-muted">{t('common.minutes', { count: s.durationMinutes })}</span>
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="flex w-full items-baseline gap-2">
+                    <span className="text-[17px] font-semibold">{s.name}</span>
+                    <span aria-hidden="true" className="min-w-6 flex-1 -translate-y-1 border-b-2 border-dotted border-line" />
+                    <span className="font-display text-[22px] font-extrabold">{formatPrice(s.price)}</span>
+                  </span>
+                  {s.description && <span className="text-[13px] leading-snug text-ink/75">{s.description}</span>}
+                  <span className="text-[13px] text-muted">{t('common.minutes', { count: s.durationMinutes })}</span>
+                </span>
               </button>
             )
           })}
@@ -247,7 +258,7 @@ function BookingForm({ barber, services, moving }: { barber: Barber; services: S
                 <span
                   aria-hidden="true"
                   className={`flex size-5 shrink-0 items-center justify-center rounded-md border-2 text-[13px] font-bold ${
-                    selected ? 'border-accent bg-accent text-ground' : 'border-line'
+                    selected ? 'border-accent bg-accent text-ground' : 'border-faint'
                   }`}
                 >
                   {selected && '✓'}
