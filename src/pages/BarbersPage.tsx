@@ -6,7 +6,7 @@ import { mediaUrl } from '../api/client'
 import { barbersApi } from '../api/endpoints'
 import type { Barber } from '../api/types'
 import { Avatar } from '../components/Avatar'
-import { FadeLines } from '../components/Logo'
+import { DefaultCover } from '../components/DefaultCover'
 import { ErrorState, Loading, Notice } from '../components/States'
 import { formatPrice, nextFreeKind, placeOf } from '../lib/format'
 
@@ -111,9 +111,7 @@ function BarberCard({ barber }: { barber: Barber }) {
         {barber.coverUrl ? (
           <img src={mediaUrl(barber.coverUrl)} alt="" loading="lazy" className="size-full object-cover" />
         ) : (
-          <div className="flex size-full items-center justify-center bg-gradient-to-br from-surface-2 to-surface">
-            <FadeLines className="w-24 opacity-30" />
-          </div>
+          <DefaultCover />
         )}
         {nextLabel && (
           <span

@@ -31,6 +31,9 @@ function api() {
     }),
     'GET /barbers/me/appointments?from=2026-11-01&to=2026-11-30': () => ({ json: [] }),
     'GET /barbers/me/time-off': () => ({ json: [] }),
+    'GET /barbers/me/availability?minutes=30&date=2026-10-15': () => ({
+      json: { barberId: 4, serviceId: null, date: '2026-10-15', durationMinutes: 30, startTimes: ['10:00', '10:15', '10:30'] },
+    }),
     'POST /barbers/me/time-off': () => ({ status: 201, json: {} }),
     'GET /barbers/me/services': () => ({ json: [service] }),
     'GET /barbers/me/working-hours': () => ({ json: [{ dayOfWeek: 'THURSDAY', startTime: '10:00', endTime: '18:00' }] }),

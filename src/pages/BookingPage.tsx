@@ -11,7 +11,7 @@ import { Avatar } from '../components/Avatar'
 import { Gallery } from '../components/Gallery'
 import { BookingTicket } from '../components/BookingTicket'
 import { NotFoundPage } from './NotFoundPage'
-import { FadeLines } from '../components/Logo'
+import { DefaultCover } from '../components/DefaultCover'
 import { Button } from '../components/Button'
 import { DayPicker } from '../components/DayPicker'
 import { ErrorState, Loading, Notice } from '../components/States'
@@ -77,9 +77,7 @@ function BarberHero({ barber }: { barber: Barber }) {
       {barber.coverUrl ? (
         <img src={mediaUrl(barber.coverUrl)} alt="" className="size-full object-cover" />
       ) : (
-        <div className="flex size-full items-center justify-center bg-gradient-to-b from-surface-2 to-ground">
-          <FadeLines className="w-28 opacity-30" />
-        </div>
+        <DefaultCover />
       )}
       <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-ground to-transparent" />
       <div className="absolute top-3 left-5">
@@ -131,7 +129,8 @@ function BookingForm({ barber, services, moving }: { barber: Barber; services: S
   const [serviceId, setServiceId] = useState(mains[0]?.id ?? 0)
   const [extraIds, setExtraIds] = useState<number[]>([])
   const [note, setNote] = useState('')
-  const [date, setDate] = useState(days[0].iso)
+  // The day the customer tapped; until then, the first day with free times.
+  const [pickedDate, setPickedDate] = useState<string | null>(null)
   const [time, setTime] = useState<string | null>(null)
   const [booked, setBooked] = useState<Appointment | null>(null)
 
@@ -139,6 +138,20 @@ function BookingForm({ barber, services, moving }: { barber: Barber; services: S
   const chosen = services.filter((s) => s.id === serviceId || extraIds.includes(s.id))
   const totalPrice = moving ? moving.price : chosen.reduce((sum, s) => sum + s.price, 0)
   const totalMinutes = moving ? moving.durationMinutes : chosen.reduce((sum, s) => sum + s.durationMinutes, 0)
+  const dayStatuses = useQuery({
+    queryKey: moving ? ['days', barber.id, 'move', moving.id] : ['days', barber.id, serviceId, extraIds],
+    queryFn: () =>
+      barbersApi.days(
+        barber.id,
+        moving ? { minutes: moving.durationMinutes } : { serviceId, extraIds },
+        days[0].iso,
+        days[days.length - 1].iso,
+      ),
+  })
+  const statusOf = (iso: string) => dayStatuses.data?.find((d) => d.date === iso)?.status
+  const firstOpen = dayStatuses.data?.find((d) => d.status === 'OPEN')?.date
+  const date = pickedDate ?? firstOpen ?? days[0].iso
+  const closed = statusOf(date) === 'CLOSED'
   const day = days.find((d) => d.iso === date)!
 
   const availability = useQuery({
@@ -147,6 +160,8 @@ function BookingForm({ barber, services, moving }: { barber: Barber; services: S
       moving
         ? barbersApi.availabilityFor(barber.id, moving.durationMinutes, date)
         : barbersApi.availability(barber.id, serviceId, extraIds, date),
+    // Wait for the day statuses, so the first request is already for the day shown; skip closed days.
+    enabled: (pickedDate !== null || !dayStatuses.isPending) && !closed,
   })
 
   const book = useMutation({
@@ -257,14 +272,16 @@ function BookingForm({ barber, services, moving }: { barber: Barber; services: S
         title={<StepTitle>{t('booking.stepDay')}</StepTitle>}
         days={days}
         selected={date}
-        onSelect={(iso) => choose(() => setDate(iso))}
+        onSelect={(iso) => choose(() => setPickedDate(iso))}
+        statusOf={statusOf}
       />
 
       <section className="flex flex-col gap-2.5">
         <StepTitle>{t('booking.stepTime')}</StepTitle>
-        {availability.isPending && <Loading />}
+        {availability.isLoading && <Loading />}
         {availability.isError && <ErrorState error={availability.error} onRetry={() => availability.refetch()} />}
-        {availability.data?.startTimes.length === 0 && <p className="py-4 text-muted">{t('booking.noTimes')}</p>}
+        {closed && <p className="py-4 text-muted">{t('booking.closedDay')}</p>}
+        {!closed && availability.data?.startTimes.length === 0 && <p className="py-4 text-muted">{t('booking.noTimes')}</p>}
         <div className="grid grid-cols-4 gap-2">
           {availability.data?.startTimes.map((slot) => {
             const selected = slot === time
