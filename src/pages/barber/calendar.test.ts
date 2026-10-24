@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Appointment, WorkingHours } from '../../api/types'
-import { monthGrid, planDay } from './calendar'
+import { dayLoad, monthGrid, planDay } from './calendar'
 
 const appointment = (id: number, start: string, end: string, status: Appointment['status'] = 'CONFIRMED') =>
   ({ id, startTime: `2026-10-22T${start}:00+03:00`, endTime: `2026-10-22T${end}:00+03:00`, status }) as Appointment
@@ -50,5 +50,39 @@ describe('monthGrid', () => {
     expect(october.lead).toBe(3)
     expect(october.days).toHaveLength(31)
     expect(october.days[0]).toBe('2026-10-01')
+  })
+})
+
+describe('dayLoad', () => {
+  // Eight working hours that Thursday; each haircut takes half an hour.
+  const cuts = (count: number) =>
+    Array.from({ length: count }, (_, i) => {
+      const start = `${String(10 + Math.floor(i / 2) + (i >= 8 ? 3 : 0)).padStart(2, '0')}:${i % 2 ? '30' : '00'}`
+      return { ...appointment(i + 1, start, start), durationMinutes: 30 } as Appointment
+    })
+
+  it('counts how much of the working time is booked, not how many appointments there are', () => {
+    expect(dayLoad('2026-10-22', [], hours, [])).toBe(0)
+    expect(dayLoad('2026-10-22', cuts(3), hours, [])).toBe(1) // 1.5 of 8 hours
+    expect(dayLoad('2026-10-22', cuts(6), hours, [])).toBe(2) // 3 of 8 hours
+    expect(dayLoad('2026-10-22', cuts(12), hours, [])).toBe(3) // 6 of 8 hours
+  })
+
+  it('marks a day with no free stretch left as full', () => {
+    const allDay = [
+      { ...appointment(1, '10:00', '14:00'), durationMinutes: 240 },
+      { ...appointment(2, '17:00', '21:00'), durationMinutes: 240 },
+    ] as Appointment[]
+    expect(dayLoad('2026-10-22', allDay, hours, [])).toBe('full')
+  })
+
+  it('falls back to the number of appointments on a day without working hours', () => {
+    expect(dayLoad('2026-10-22', cuts(2), [], [])).toBe(1)
+    expect(dayLoad('2026-10-22', cuts(5), [], [])).toBe(2)
+    expect(dayLoad('2026-10-22', cuts(7), [], [])).toBe(3)
+  })
+
+  it('leaves cancelled appointments out', () => {
+    expect(dayLoad('2026-10-22', [{ ...appointment(1, '10:00', '10:30', 'CANCELLED'), durationMinutes: 30 } as Appointment], hours, [])).toBe(0)
   })
 })

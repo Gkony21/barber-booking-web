@@ -83,6 +83,23 @@ export function planDay(
   return items.sort((a, b) => a.start.localeCompare(b.start) || (a.kind === 'free' ? 1 : -1))
 }
 
+/**
+ * How full a day is, for the dots in the month: 1 up to a third of the working time booked, 2 up to
+ * two thirds, 3 beyond that, and 'full' when no free stretch is left. Without working hours that day
+ * (bookings entered outside them), the number of appointments decides: 1–3, 4–6, 7 or more.
+ */
+export function dayLoad(isoDate: string, appointments: Appointment[], hours: WorkingHours[], timeOff: TimeOff[]): 0 | 1 | 2 | 3 | 'full' {
+  const booked = appointments.filter((a) => a.status === 'PENDING' || a.status === 'CONFIRMED')
+  if (booked.length === 0) return 0
+  const shifts = isOff(isoDate, timeOff) ? [] : hours.filter((h) => h.dayOfWeek === dayOfWeek(isoDate))
+  const blocked = blocksOn(isoDate, timeOff).reduce((sum, b) => sum + minutes(b.endTime!) - minutes(b.startTime!), 0)
+  const working = shifts.reduce((sum, s) => sum + minutes(s.endTime) - minutes(s.startTime), 0) - blocked
+  if (working <= 0) return booked.length >= 7 ? 3 : booked.length >= 4 ? 2 : 1
+  if (!planDay(isoDate, booked, hours, timeOff, null).some((item) => item.kind === 'free')) return 'full'
+  const used = booked.reduce((sum, a) => sum + a.durationMinutes, 0) / working
+  return used > 2 / 3 ? 3 : used > 1 / 3 ? 2 : 1
+}
+
 function addFree(items: DayItem[], start: string, end: string) {
   if (minutes(end) - minutes(start) >= MIN_FREE_MINUTES) items.push({ kind: 'free', start, end })
 }
