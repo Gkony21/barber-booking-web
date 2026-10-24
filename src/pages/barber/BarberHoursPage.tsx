@@ -17,7 +17,7 @@ export function BarberHoursPage() {
   return (
     <div className="flex flex-col gap-10 pt-4">
       <section className="flex flex-col gap-5">
-        <h1 className="font-display text-5xl leading-none font-extrabold uppercase">{t('barber.hours.title')}</h1>
+        <h1 className="font-display text-[52px] leading-[0.88] font-black italic uppercase">{t('barber.hours.title')}</h1>
         {hours.isPending && <Loading />}
         {hours.isError && <ErrorState error={hours.error} onRetry={() => hours.refetch()} />}
         {hours.isSuccess && <WeekEditor initial={toWeek(hours.data)} />}
@@ -191,7 +191,7 @@ function TimeOffSection() {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <h2 className="font-display text-3xl leading-none font-extrabold uppercase">{t('barber.timeOff.title')}</h2>
+        <h2 className="font-display text-3xl leading-none font-black italic uppercase">{t('barber.timeOff.title')}</h2>
         <p className="text-sm text-muted">{t('barber.timeOff.body')}</p>
       </div>
 

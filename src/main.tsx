@@ -10,14 +10,17 @@ import '@fontsource/fira-sans/greek-600.css'
 import '@fontsource/fira-sans/latin-600.css'
 import '@fontsource/fira-sans/greek-700.css'
 import '@fontsource/fira-sans/latin-700.css'
-import '@fontsource/fira-sans-condensed/greek-600.css'
-import '@fontsource/fira-sans-condensed/latin-600.css'
-import '@fontsource/fira-sans-condensed/greek-800.css'
-import '@fontsource/fira-sans-condensed/latin-800.css'
+import '@fontsource/fira-sans-extra-condensed/greek-800.css'
+import '@fontsource/fira-sans-extra-condensed/latin-800.css'
+import '@fontsource/fira-sans-extra-condensed/greek-900.css'
+import '@fontsource/fira-sans-extra-condensed/latin-900.css'
+import '@fontsource/fira-sans-extra-condensed/greek-900-italic.css'
+import '@fontsource/fira-sans-extra-condensed/latin-900-italic.css'
 import './i18n'
 import './index.css'
 import { App } from './App'
 import { AuthProvider } from './auth/AuthProvider'
+import { fixGreekCapitals } from './lib/greekCaps'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,7 +28,10 @@ const queryClient = new QueryClient({
   },
 })
 
-createRoot(document.getElementById('root')!).render(
+const root = document.getElementById('root')!
+fixGreekCapitals(root)
+
+createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

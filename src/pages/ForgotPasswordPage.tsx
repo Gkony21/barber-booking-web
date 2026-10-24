@@ -31,7 +31,7 @@ export function ForgotPasswordPage() {
   return (
     <div className="flex flex-col gap-8 pt-6">
       <div className="flex flex-col gap-2">
-        <h1 className="font-display text-5xl leading-none font-extrabold uppercase">{t('auth.forgotTitle')}</h1>
+        <h1 className="font-display text-[52px] leading-[0.88] font-black italic uppercase">{t('auth.forgotTitle')}</h1>
         <p className="text-muted">{t('auth.forgotBody')}</p>
       </div>
 

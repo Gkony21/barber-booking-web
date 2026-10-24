@@ -165,7 +165,7 @@ export function WorkPhotosEditor() {
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="font-display text-3xl leading-none font-extrabold uppercase">{t('barber.photos.workTitle')}</h2>
+        <h2 className="font-display text-3xl leading-none font-black italic uppercase">{t('barber.photos.workTitle')}</h2>
         <span className="text-sm text-muted">{t('barber.photos.count', { count, max: MAX_PHOTOS })}</span>
       </div>
       <p className="text-sm text-muted">{t('barber.photos.workBody', { max: MAX_PHOTOS })}</p>

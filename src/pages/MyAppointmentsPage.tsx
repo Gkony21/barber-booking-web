@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { appointmentsApi } from '../api/endpoints'
 import type { Appointment } from '../api/types'
 import { Button } from '../components/Button'
+import { buttonClass } from '../components/buttonStyles'
 import { ErrorState, Loading, Notice } from '../components/States'
 import { errorMessage } from '../lib/errors'
 import { formatAppointmentTime, formatPrice, servicesOf } from '../lib/format'
@@ -24,12 +25,12 @@ export function MyAppointmentsPage() {
 
   return (
     <div className="flex flex-col gap-8 pt-4">
-      <h1 className="font-display text-5xl leading-none font-extrabold uppercase">{t('appointments.title')}</h1>
+      <h1 className="font-display text-[52px] leading-[0.88] font-black italic uppercase">{t('appointments.title')}</h1>
 
       {appointments.data.length === 0 && (
         <div className="flex flex-col items-center gap-4 py-12 text-center">
           <p className="text-muted">{t('appointments.empty')}</p>
-          <Link to="/" className="flex min-h-12 items-center rounded-2xl bg-accent px-6 font-semibold text-ground">
+          <Link to="/" className={buttonClass('primary', 'px-6')}>
             {t('appointments.findBarber')}
           </Link>
         </div>
@@ -82,7 +83,7 @@ function AppointmentCard({ appointment, cancellable = false }: { appointment: Ap
     <article className="flex flex-col gap-3 rounded-2xl bg-surface p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-0.5">
-          <h3 className="font-display text-2xl leading-tight font-extrabold uppercase">{appointment.barberName}</h3>
+          <h3 className="font-display text-2xl leading-tight font-black italic uppercase">{appointment.barberName}</h3>
           <p className="text-muted">
             {servicesOf(appointment)} · {formatPrice(appointment.price)}
           </p>
@@ -124,7 +125,7 @@ function AppointmentCard({ appointment, cancellable = false }: { appointment: Ap
           {/* Opens the barber's page to pick a new time; the services stay the same. */}
           <Link
             to={`/barbers/${appointment.barberId}?reschedule=${appointment.id}`}
-            className="flex min-h-12 flex-1 items-center justify-center rounded-2xl bg-surface-2 px-4 font-semibold text-ink hover:bg-line"
+            className={buttonClass('tonal', 'flex-1 px-4')}
           >
             {t('appointments.reschedule')}
           </Link>

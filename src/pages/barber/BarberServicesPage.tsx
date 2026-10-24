@@ -24,7 +24,7 @@ export function BarberServicesPage() {
 
   return (
     <div className="flex flex-col gap-8 pt-4">
-      <h1 className="font-display text-5xl leading-none font-extrabold uppercase">{t('barber.services.title')}</h1>
+      <h1 className="font-display text-[52px] leading-[0.88] font-black italic uppercase">{t('barber.services.title')}</h1>
       {(['MAIN', 'EXTRA'] as const).map((kind) => (
         <ServiceGroup
           key={kind}
@@ -56,7 +56,7 @@ function ServiceGroup({
   return (
     <section className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
-        <h2 className="font-display text-2xl font-extrabold uppercase">{main ? t('barber.services.mainTitle') : t('barber.services.extrasTitle')}</h2>
+        <h2 className="font-display text-2xl font-black italic uppercase">{main ? t('barber.services.mainTitle') : t('barber.services.extrasTitle')}</h2>
         <p className="text-sm leading-relaxed text-muted">{main ? t('barber.services.mainHint') : t('barber.services.extrasHint')}</p>
         {main && <p className="text-sm leading-relaxed text-muted">{t('barber.services.featuredHint')}</p>}
       </div>
@@ -134,7 +134,7 @@ function ServiceRow({ service, onEdit }: { service: ServiceOffering; onEdit: () 
           <span className="text-sm text-muted">{t('common.minutes', { count: service.durationMinutes })}</span>
           {service.description && <span className="text-sm text-muted">{service.description}</span>}
         </div>
-        <span className="font-display text-2xl font-extrabold">{formatServicePrice(service.price, t)}</span>
+        <span className="font-display text-2xl font-black">{formatServicePrice(service.price, t)}</span>
       </div>
       {(remove.isError || feature.isError) && <Notice tone="error">{errorMessage(remove.error ?? feature.error, t)}</Notice>}
       <div className="flex justify-end gap-1">

@@ -45,7 +45,7 @@ function DetailsForm({ user, title }: { user: User; title: string }) {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3" noValidate>
-      <h2 className="font-display text-xl font-extrabold uppercase">{title}</h2>
+      <h2 className="font-display text-xl font-black italic uppercase">{title}</h2>
       {!user.phoneNumber && <Notice>{t('account.phoneMissing')}</Notice>}
       <TextField label={t('auth.name')} autoComplete="name" maxLength={100} required value={name} onChange={(e) => {
         setName(e.target.value)
@@ -92,7 +92,7 @@ export function ChangePassword() {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3" noValidate>
-      <h2 className="font-display text-xl font-extrabold uppercase">{t('account.passwordTitle')}</h2>
+      <h2 className="font-display text-xl font-black italic uppercase">{t('account.passwordTitle')}</h2>
       <PasswordField label={t('account.currentPassword')} autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} />
       <PasswordField label={t('account.newPassword')} autoComplete="new-password" value={next} onChange={(e) => {
         setNext(e.target.value)

@@ -44,7 +44,7 @@ export function AccountPage() {
 
   return (
     <div className="flex flex-col gap-8 pt-4">
-      <h1 className="font-display text-5xl leading-none font-extrabold uppercase">{t('account.title')}</h1>
+      <h1 className="font-display text-[52px] leading-[0.88] font-black italic uppercase">{t('account.title')}</h1>
 
       <section className="flex flex-col gap-1 rounded-2xl bg-surface p-4">
         <span className="text-sm text-muted">{t('account.signedInAs')}</span>
@@ -59,7 +59,7 @@ export function AccountPage() {
       </Button>
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-display text-xl font-extrabold uppercase">{t('account.legal')}</h2>
+        <h2 className="font-display text-xl font-black italic uppercase">{t('account.legal')}</h2>
         <Link to="/terms" className="flex min-h-11 items-center font-semibold text-accent">
           {t('nav.terms')}
         </Link>
@@ -69,7 +69,7 @@ export function AccountPage() {
       </section>
 
       <section className="flex flex-col gap-3 rounded-2xl border border-danger/40 p-4">
-        <h2 className="font-display text-xl font-extrabold text-danger uppercase">{t('account.deleteTitle')}</h2>
+        <h2 className="font-display text-xl font-black italic text-danger uppercase">{t('account.deleteTitle')}</h2>
         <p className="text-sm leading-relaxed text-muted">{t('account.deleteBody')}</p>
         {!deleting ? (
           <Button variant="secondary" onClick={() => setDeleting(true)}>

@@ -17,7 +17,7 @@ export function ShopSection({ barber }: { barber: Barber }) {
 
   return (
     <section className="flex flex-col gap-4">
-      <h2 className="font-display text-2xl font-extrabold uppercase">{t('barber.shop.title')}</h2>
+      <h2 className="font-display text-2xl font-black italic uppercase">{t('barber.shop.title')}</h2>
       {barber.status !== 'APPROVED' ? (
         <p className="text-sm text-muted">{t('barber.shop.notApproved')}</p>
       ) : barber.shopId ? (
@@ -77,7 +77,7 @@ function InvitationCard({ invitation }: { invitation: ShopInvitation }) {
     <article className="flex flex-col gap-3 rounded-2xl border-2 border-accent bg-surface p-4">
       <span className="text-sm font-semibold text-accent">{t('barber.shop.invitation')}</span>
       <div className="flex flex-col gap-0.5">
-        <span className="font-display text-2xl leading-tight font-extrabold uppercase">{invitation.shopName}</span>
+        <span className="font-display text-2xl leading-tight font-black italic uppercase">{invitation.shopName}</span>
         <span className="text-sm text-muted">
           {invitation.shopAddress}, {invitation.shopCity}
         </span>
@@ -124,7 +124,7 @@ function MyShop({ barber, shopId }: { barber: Barber; shopId: number }) {
         <ShopForm shop={shop.data} onDone={() => setEditing(false)} />
       ) : (
         <article className="flex flex-col gap-1 rounded-2xl bg-surface p-4">
-          <span className="font-display text-2xl leading-tight font-extrabold uppercase">{shop.data.name}</span>
+          <span className="font-display text-2xl leading-tight font-black italic uppercase">{shop.data.name}</span>
           <span className="text-sm text-muted">
             {shop.data.address}, {shop.data.city}
           </span>
@@ -316,7 +316,7 @@ function ShopForm({ shop, onDone }: { shop: Shop | null; onDone: () => void }) {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3 rounded-2xl border-2 border-accent bg-surface p-4" noValidate>
-      <h3 className="font-display text-xl font-extrabold uppercase">{shop ? t('barber.shop.edit') : t('barber.shop.createTitle')}</h3>
+      <h3 className="font-display text-xl font-black italic uppercase">{shop ? t('barber.shop.edit') : t('barber.shop.createTitle')}</h3>
       <TextField onSurface required maxLength={100} label={t('barber.shop.name')} value={form.name} onChange={set('name')} />
       <TextField onSurface required maxLength={255} label={t('barber.shop.address')} value={form.address} onChange={set('address')} />
       <TextField onSurface required maxLength={100} label={t('barber.shop.city')} value={form.city} onChange={set('city')} />

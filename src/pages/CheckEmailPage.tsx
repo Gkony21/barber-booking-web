@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { authApi } from '../api/endpoints'
 import { Button } from '../components/Button'
+import { buttonClass } from '../components/buttonStyles'
 import { Notice } from '../components/States'
 
 export function CheckEmailPage() {
@@ -19,7 +20,7 @@ export function CheckEmailPage() {
   return (
     <div className="flex flex-col gap-6 pt-10">
       <MailIcon />
-      <h1 className="font-display text-5xl leading-none font-extrabold uppercase">{t('auth.checkEmailTitle')}</h1>
+      <h1 className="font-display text-[52px] leading-[0.88] font-black italic uppercase">{t('auth.checkEmailTitle')}</h1>
       <p className="text-muted">{t('auth.checkEmailBody', { email })}</p>
       {resent ? (
         <Notice tone="success">{t('auth.resent')}</Notice>
@@ -30,7 +31,7 @@ export function CheckEmailPage() {
           </Button>
         )
       )}
-      <Link to="/login" className="flex min-h-12 items-center justify-center rounded-2xl bg-accent font-semibold text-ground">
+      <Link to="/login" className={buttonClass('primary', 'w-full')}>
         {t('auth.loginButton')}
       </Link>
     </div>
