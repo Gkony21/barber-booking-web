@@ -9,7 +9,10 @@ import { Button } from '../../components/Button'
 import { ErrorState, Loading, Notice } from '../../components/States'
 import { errorMessage } from '../../lib/errors'
 import { athensDate, formatAppointmentTime, formatDayHeading, formatPrice, formatTime, servicesOf } from '../../lib/format'
+import { GREETING, reminderText } from '../../lib/messages'
 import { AppointmentForm } from './AppointmentForm'
+import { MessagePanel } from './MessagePanel'
+import { useMyBarber } from './useMyBarber'
 
 /** Everyone who booked with the barber, by app or by phone, most recent first; searchable by name or number. */
 export function ClientsPage() {
@@ -87,6 +90,9 @@ export function ClientPage() {
   const card = useQuery({ queryKey: ['barber', 'clients', 'card', key], queryFn: () => barberMeApi.client(key) })
   const [booking, setBooking] = useState(false)
   const [justBooked, setJustBooked] = useState(false)
+  const [messaging, setMessaging] = useState(false)
+  const slug = useMyBarber().data?.slug
+  const bookingLink = slug ? `${window.location.origin}/${slug}` : null
 
   if (card.isPending) return <Loading />
   if (card.isError) return <ErrorState error={card.error} onRetry={() => card.refetch()} />
@@ -113,6 +119,20 @@ export function ClientPage() {
           </a>
         )}
       </div>
+
+      {client.phone && !messaging && (
+        <Button variant="outline" onClick={() => setMessaging(true)}>
+          {t('barber.messages.open')}
+        </Button>
+      )}
+      {client.phone && messaging && (
+        <MessagePanel
+          phone={client.phone}
+          text={client.nextVisit ? reminderText(client.nextVisit) : GREETING}
+          bookingLink={client.appCustomer ? null : bookingLink}
+          onClose={() => setMessaging(false)}
+        />
+      )}
 
       <section aria-label={t('barber.clients.title')} className="grid grid-cols-3 gap-2">
         <Stat value={String(client.visits)} label={t('barber.clients.statVisits')} />

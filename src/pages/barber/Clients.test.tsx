@@ -55,6 +55,7 @@ it('lists the customers and finds them by name or number', async () => {
 
 it('shows a customer with their note, visits and what they had, and books the same again', async () => {
   const calls = mockApi({
+    'GET /barbers/me': () => ({ json: barber }),
     'GET /barbers/me/clients/p6911111111': () => ({ json: { client: kostas, history: [visit] } }),
     'PUT /barbers/me/clients/p6911111111/note': () => ({ json: { ...kostas, note: 'νο 2 στο πλάι' } }),
     'GET /barbers/me/services': () => ({ json: [haircut, beard, wash] }),

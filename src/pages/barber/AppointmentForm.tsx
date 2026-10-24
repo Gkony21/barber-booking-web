@@ -27,7 +27,8 @@ export function AppointmentForm({
   walkIn = false,
   prefill,
 }: {
-  onDone: (saved: boolean) => void
+  /** With the saved appointment, e.g. to send the customer a confirmation. */
+  onDone: (saved: boolean, appointment?: Appointment) => void
   appointment?: Appointment
   /** Pre-filled from a free stretch in the schedule ("+ Κλείσε"). */
   initialDate?: string
@@ -105,9 +106,9 @@ export function AppointmentForm({
       if (!editing) return barberMeApi.bookManually({ ...start, ...details })
       return barberMeApi.updateAppointment(appointment.id, ownDetails ? { ...start, ...details } : start)
     },
-    onSuccess: async () => {
+    onSuccess: async (saved) => {
       await queryClient.invalidateQueries({ queryKey: ['barber', 'appointments'] })
-      onDone(true)
+      onDone(true, saved)
     },
   })
 

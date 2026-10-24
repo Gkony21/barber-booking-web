@@ -10,7 +10,9 @@ import { TextField } from '../../components/TextField'
 import { errorMessage } from '../../lib/errors'
 import { athensDate, bookableDays, formatAppointmentTime, formatDayHeading, formatPrice, formatTime, servicesOf } from '../../lib/format'
 import { Sticker } from '../../components/Street'
+import { confirmationText, reminderText } from '../../lib/messages'
 import { AppointmentForm } from './AppointmentForm'
+import { MessagePanel } from './MessagePanel'
 import { byDay, dayLoad, dayOfWeek, isOff, monthGrid, planDay } from './calendar'
 import { ProfileForm } from './ProfileForm'
 import { useMyBarber } from './useMyBarber'
@@ -45,7 +47,11 @@ function Schedule({ barber }: { barber: Barber }) {
   const [onlyBooked, setOnlyBooked] = useState(false)
   // Open when adding by hand; a free stretch's "+ Κλείσε" fills in its day and time, "Τώρα" the current quarter hour.
   const [adding, setAdding] = useState<{ date?: string; time?: string; walkIn?: boolean } | null>(null)
-  const [justSaved, setJustSaved] = useState(false)
+  // The booking just entered by hand, to offer sending the customer a confirmation.
+  const [justSaved, setJustSaved] = useState<Appointment | null>(null)
+  const [confirming, setConfirming] = useState(false)
+  // Added to messages so phone customers can book online next time.
+  const bookingLink = barber.slug ? `${window.location.origin}/${barber.slug}` : null
   // The free stretch being turned into a block of hours, if any.
   const [blocking, setBlocking] = useState<{ start: string } | null>(null)
   const formAnchor = useRef<HTMLDivElement>(null)
@@ -95,7 +101,8 @@ function Schedule({ barber }: { barber: Barber }) {
 
   const openForm = (prefill: { date?: string; time?: string; walkIn?: boolean }) => {
     setAdding(prefill)
-    setJustSaved(false)
+    setJustSaved(null)
+    setConfirming(false)
     requestAnimationFrame(() => formAnchor.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }))
   }
 
@@ -165,9 +172,10 @@ function Schedule({ barber }: { barber: Barber }) {
             initialDate={adding.date}
             initialTime={adding.time}
             walkIn={adding.walkIn}
-            onDone={(saved) => {
+            onDone={(saved, appointment) => {
               setAdding(null)
-              setJustSaved(saved)
+              setJustSaved(saved ? (appointment ?? null) : null)
+              setConfirming(false)
             }}
           />
         ) : (
@@ -182,8 +190,22 @@ function Schedule({ barber }: { barber: Barber }) {
           </div>
         )}
         {justSaved && (
-          <div className="pt-3">
+          <div className="flex flex-col gap-3 pt-3">
             <Notice tone="success">{t('barber.schedule.saved')}</Notice>
+            {justSaved.customerPhone &&
+              justSaved.startTime &&
+              (confirming ? (
+                <MessagePanel
+                  phone={justSaved.customerPhone}
+                  text={confirmationText(justSaved.startTime)}
+                  bookingLink={bookingLink}
+                  onClose={() => setConfirming(false)}
+                />
+              ) : (
+                <Button variant="outline" onClick={() => setConfirming(true)}>
+                  {t('barber.messages.confirm')}
+                </Button>
+              ))}
           </div>
         )}
       </div>
@@ -221,7 +243,7 @@ function Schedule({ barber }: { barber: Barber }) {
 
         {items.map((item) =>
           item.kind === 'appointment' ? (
-            <AppointmentRow key={item.appointment.id} appointment={item.appointment} />
+            <AppointmentRow key={item.appointment.id} appointment={item.appointment} bookingLink={bookingLink} />
           ) : item.kind === 'block' ? (
             <BlockRow key={`block-${item.timeOff.id}`} block={item.timeOff} />
           ) : blocking?.start === item.start ? (
@@ -352,7 +374,15 @@ function MonthCalendar({
   )
 }
 
-function AppointmentRow({ appointment, dayLabel }: { appointment: Appointment; dayLabel?: string }) {
+function AppointmentRow({
+  appointment,
+  dayLabel,
+  bookingLink,
+}: {
+  appointment: Appointment
+  dayLabel?: string
+  bookingLink?: string | null
+}) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const pending = appointment.status === 'PENDING'
@@ -364,6 +394,9 @@ function AppointmentRow({ appointment, dayLabel }: { appointment: Appointment; d
   // A confirmed one can be moved or changed, unless the customer is waiting for an answer about it.
   const editable = appointment.status === 'CONFIRMED' && !started && !isChange && !appointment.requestedStartTime
   const [editing, setEditing] = useState(false)
+  // A reminder by Viber, WhatsApp or SMS, for anyone with a number, before the appointment.
+  const [messaging, setMessaging] = useState(false)
+  const canMessage = Boolean(appointment.customerPhone) && !started && !isChange && !pending && appointment.status === 'CONFIRMED'
 
   const action = useMutation({
     mutationFn: (kind: 'confirm' | 'reject' | 'cancel' | 'noShow') => barberMeApi[kind](appointment.id),
@@ -466,14 +499,19 @@ function AppointmentRow({ appointment, dayLabel }: { appointment: Appointment; d
           )
         ) : (
           <>
+            {canMessage && (
+              <Button variant="ghost" className="ml-auto min-h-11 px-3 text-sm" onClick={() => setMessaging(!messaging)}>
+                {t('barber.messages.open')}
+              </Button>
+            )}
             {editable && (
-              <Button variant="ghost" className="ml-auto min-h-11 px-3 text-sm" onClick={() => setEditing(true)}>
+              <Button variant="ghost" className={`min-h-11 px-3 text-sm ${canMessage ? '' : 'ml-auto'}`} onClick={() => setEditing(true)}>
                 {t('barber.schedule.edit')}
               </Button>
             )}
             <Button
               variant="ghost"
-              className={`min-h-11 px-3 text-sm ${editable ? '' : 'ml-auto'}`}
+              className={`min-h-11 px-3 text-sm ${editable || canMessage ? '' : 'ml-auto'}`}
               disabled={action.isPending}
               onClick={() => run('cancel')}
             >
@@ -482,6 +520,15 @@ function AppointmentRow({ appointment, dayLabel }: { appointment: Appointment; d
           </>
         )}
       </div>
+
+      {messaging && appointment.customerPhone && (
+        <MessagePanel
+          phone={appointment.customerPhone}
+          text={reminderText(appointment.startTime)}
+          bookingLink={appointment.manual ? bookingLink : null}
+          onClose={() => setMessaging(false)}
+        />
+      )}
     </article>
   )
 }
