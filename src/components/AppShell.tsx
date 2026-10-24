@@ -56,6 +56,7 @@ export function AppShell() {
             ) : (
               <>
                 <BottomLink to="/barber" label={t('barber.nav.schedule')} icon={<CalendarIcon />} />
+                <BottomLink to="/barber/clients" end={false} label={t('barber.nav.clients')} icon={<PeopleIcon />} />
                 <BottomLink to="/barber/services" label={t('barber.nav.services')} icon={<ScissorsIcon />} />
                 <BottomLink to="/barber/hours" label={t('barber.nav.hours')} icon={<ClockIcon />} />
                 <BottomLink to="/barber/profile" label={t('barber.nav.profile')} icon={<UserIcon />} />
@@ -68,11 +69,11 @@ export function AppShell() {
   )
 }
 
-function BottomLink({ to, label, icon }: { to: string; label: string; icon: React.ReactNode }) {
+function BottomLink({ to, label, icon, end = true }: { to: string; label: string; icon: React.ReactNode; end?: boolean }) {
   return (
     <NavLink
       to={to}
-      end
+      end={end}
       className={({ isActive }) =>
         `flex min-h-16 flex-1 flex-col items-center justify-center gap-1 text-xs font-semibold ${isActive ? 'text-accent' : 'text-muted'}`
       }
@@ -98,6 +99,15 @@ function CalendarIcon() {
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="3" y="4" width="18" height="18" rx="3" />
       <path d="M16 2v4M8 2v4M3 10h18" />
+    </svg>
+  )
+}
+
+function PeopleIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.2a6.5 6.5 0 0 1 3.5 5.8" />
     </svg>
   )
 }

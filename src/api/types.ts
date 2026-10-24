@@ -88,6 +88,33 @@ export interface Appointment {
   requestedStartTime?: string | null
   /** On that request itself (barber's schedule): the confirmed time it would replace. */
   originalStartTime?: string | null
+  /** For the barber: who this is in their list of customers (opens their card). */
+  clientKey?: string | null
+}
+
+/** One of the barber's customers, by app or by phone; one entry per mobile number. */
+export interface Client {
+  key: string
+  name: string
+  phone: string | null
+  /** Has booked through the app at least once. */
+  appCustomer: boolean
+  /** Appointments that took place. */
+  visits: number
+  noShows: number
+  lastVisit: string | null
+  nextVisit: string | null
+  /** With lastExtraIds: what they had last time, to book the same again. */
+  lastServiceId: number | null
+  lastExtraIds: number[]
+  /** The barber's own note; customers never see it. */
+  note: string | null
+}
+
+export interface ClientCard {
+  client: Client
+  /** Every appointment at this barber, newest first. */
+  history: Appointment[]
 }
 
 export interface User {

@@ -4,16 +4,18 @@ import type {
   Appointment,
   Availability,
   Barber,
-  Photo,
   BarberProfileInput,
   BarberStatus,
+  Client,
+  ClientCard,
   DayStatus,
+  Photo,
   Role,
+  ServiceInput,
+  ServiceOffering,
   Shop,
   ShopInput,
   ShopInvitation,
-  ServiceInput,
-  ServiceOffering,
   TimeOff,
   User,
   WorkingHours,
@@ -109,6 +111,18 @@ export const barberMeApi = {
   reject: (id: number) => api<Appointment>(`/barbers/me/appointments/${id}/reject`, { method: 'POST' }),
   cancel: (id: number) => api<Appointment>(`/barbers/me/appointments/${id}/cancel`, { method: 'POST' }),
   noShow: (id: number) => api<Appointment>(`/barbers/me/appointments/${id}/no-show`, { method: 'POST' }),
+
+  /** The barber's customers, newest first; with a query, those whose name or number matches. */
+  clients: (query = '', limit?: number) => {
+    const params = new URLSearchParams()
+    if (query) params.set('q', query)
+    if (limit) params.set('limit', String(limit))
+    const search = params.toString()
+    return api<Client[]>(`/barbers/me/clients${search ? `?${search}` : ''}`)
+  },
+  client: (key: string) => api<ClientCard>(`/barbers/me/clients/${encodeURIComponent(key)}`),
+  saveClientNote: (key: string, note: string) =>
+    api<Client>(`/barbers/me/clients/${encodeURIComponent(key)}/note`, { method: 'PUT', body: { note } }),
 
   services: () => api<ServiceOffering[]>('/barbers/me/services'),
   createService: (body: ServiceInput) => api<ServiceOffering>('/barbers/me/services', { method: 'POST', body }),
