@@ -73,7 +73,7 @@ export interface Appointment {
   serviceId: number
   serviceName: string
   /** Added on top of the main service; durationMinutes and price are totals including them. */
-  extras: { name: string; price: number; durationMinutes: number }[]
+  extras: { serviceId: number; name: string; price: number; durationMinutes: number }[]
   durationMinutes: number
   price: number
   startTime: string

@@ -9,8 +9,9 @@ import { ErrorState, Loading, Notice } from '../../components/States'
 import { TextField } from '../../components/TextField'
 import { errorMessage } from '../../lib/errors'
 import { athensDate, bookableDays, formatAppointmentTime, formatDayHeading, formatPrice, formatTime, servicesOf } from '../../lib/format'
-import { byDay, dayOfWeek, isOff, monthGrid, planDay } from './calendar'
-import { NewAppointmentForm } from './NewAppointmentForm'
+import { Sticker } from '../../components/Street'
+import { AppointmentForm } from './AppointmentForm'
+import { byDay, dayLoad, dayOfWeek, isOff, monthGrid, planDay } from './calendar'
 import { ProfileForm } from './ProfileForm'
 import { useMyBarber } from './useMyBarber'
 
@@ -42,8 +43,8 @@ function Schedule({ barber }: { barber: Barber }) {
   const [month, setMonth] = useState(today.slice(0, 7)) // "YYYY-MM"
   const [selected, setSelected] = useState(today)
   const [onlyBooked, setOnlyBooked] = useState(false)
-  // Open when adding by hand; a free stretch's "+ Κλείσε" fills in its day and time.
-  const [adding, setAdding] = useState<{ date?: string; time?: string } | null>(null)
+  // Open when adding by hand; a free stretch's "+ Κλείσε" fills in its day and time, "Τώρα" the current quarter hour.
+  const [adding, setAdding] = useState<{ date?: string; time?: string; walkIn?: boolean } | null>(null)
   const [justSaved, setJustSaved] = useState(false)
   // The free stretch being turned into a block of hours, if any.
   const [blocking, setBlocking] = useState<{ start: string } | null>(null)
@@ -88,7 +89,11 @@ function Schedule({ barber }: { barber: Barber }) {
     setMonth(next)
     setSelected(next === today.slice(0, 7) ? today : `${next}-01`)
   }
-  const openForm = (prefill: { date?: string; time?: string }) => {
+  // The day at a glance: what is booked today, what waits for an answer, and roughly what today brings in.
+  const todays = (upcoming.data ?? []).filter((a) => athensDate(a.startTime) === today && (a.status === 'CONFIRMED' || a.status === 'PENDING'))
+  const estimate = todays.filter((a) => a.status === 'CONFIRMED' && !a.originalStartTime).reduce((sum, a) => sum + a.price, 0)
+
+  const openForm = (prefill: { date?: string; time?: string; walkIn?: boolean }) => {
     setAdding(prefill)
     setJustSaved(false)
     requestAnimationFrame(() => formAnchor.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }))
@@ -100,6 +105,14 @@ function Schedule({ barber }: { barber: Barber }) {
   return (
     <div className="flex flex-col gap-7 pt-4">
       <h1 className="font-display text-[52px] leading-[0.88] font-black italic uppercase">{t('barber.schedule.title')}</h1>
+
+      {upcoming.isSuccess && (
+        <section aria-label={t('barber.schedule.statsTitle')} className="grid grid-cols-3 gap-2">
+          <Stat value={String(todays.filter((a) => !a.originalStartTime).length)} label={t('barber.schedule.statAppointments')} />
+          <Stat value={String(requests.length)} label={t('barber.schedule.statRequests')} hot={requests.length > 0} />
+          <Stat value={`~${Math.round(estimate)}€`} label={t('barber.schedule.statEstimate')} />
+        </section>
+      )}
 
       {barber.status === 'PENDING' && <Notice>{t('barber.pendingApproval')}</Notice>}
       {barber.status === 'SUSPENDED' && <Notice tone="error">{t('barber.suspended')}</Notice>}
@@ -138,6 +151,7 @@ function Schedule({ barber }: { barber: Barber }) {
         today={today}
         selected={selected}
         countOn={(iso) => days.get(iso)?.length ?? 0}
+        loadOn={(iso) => dayLoad(iso, days.get(iso) ?? [], hours.data ?? [], timeOff.data ?? [])}
         isClosed={isClosed}
         onSelect={setSelected}
         onMonth={(delta) => showMonth(shiftMonth(month, delta))}
@@ -146,19 +160,26 @@ function Schedule({ barber }: { barber: Barber }) {
 
       <div ref={formAnchor} className="scroll-mt-4">
         {adding ? (
-          <NewAppointmentForm
-            key={`${adding.date}-${adding.time}`}
+          <AppointmentForm
+            key={`${adding.date}-${adding.time}-${adding.walkIn}`}
             initialDate={adding.date}
             initialTime={adding.time}
+            walkIn={adding.walkIn}
             onDone={(saved) => {
               setAdding(null)
               setJustSaved(saved)
             }}
           />
         ) : (
-          <Button className="w-full" onClick={() => openForm({ date: selected >= today ? selected : undefined })}>
-            {t('barber.schedule.add')}
-          </Button>
+          <div className="flex gap-2">
+            <Button className="flex-1" onClick={() => openForm({ date: selected >= today ? selected : undefined })}>
+              {t('barber.schedule.add')}
+            </Button>
+            {/* Someone just sat down: the current quarter hour today, in two taps. */}
+            <Button variant="outline" onClick={() => openForm({ date: today, walkIn: true })}>
+              {t('barber.schedule.walkIn')}
+            </Button>
+          </div>
         )}
         {justSaved && (
           <div className="pt-3">
@@ -234,7 +255,16 @@ function shiftMonth(month: string, delta: number): string {
 const monthTitleFormat = new Intl.DateTimeFormat('el-GR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
 const WEEKDAYS = ['Δευ', 'Τρί', 'Τετ', 'Πέμ', 'Παρ', 'Σάβ', 'Κυρ']
 
-/** A month at a glance: one dot per appointment (up to three), closed days dimmed. */
+function Stat({ value, label, hot = false }: { value: string; label: string; hot?: boolean }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-0.5 rounded-md bg-surface px-3 py-2.5">
+      <span className={`font-display text-[34px] leading-[0.9] font-black italic ${hot ? 'text-accent' : 'text-ink'}`}>{value}</span>
+      <span className="truncate font-display text-xs font-black tracking-wide text-muted uppercase">{label}</span>
+    </div>
+  )
+}
+
+/** A month at a glance: dots for how full each day is (see dayLoad), a bar when full, closed days dimmed. */
 function MonthCalendar({
   year,
   month,
@@ -242,6 +272,7 @@ function MonthCalendar({
   today,
   selected,
   countOn,
+  loadOn,
   isClosed,
   onSelect,
   onMonth,
@@ -253,6 +284,7 @@ function MonthCalendar({
   today: string
   selected: string
   countOn: (iso: string) => number
+  loadOn: (iso: string) => ReturnType<typeof dayLoad>
   isClosed: (iso: string) => boolean
   onSelect: (iso: string) => void
   onMonth: (delta: number) => void
@@ -289,6 +321,7 @@ function MonthCalendar({
         ))}
         {grid.days.map((iso) => {
           const count = countOn(iso)
+          const load = loadOn(iso)
           const isSelected = iso === selected
           const dim = iso < today || isClosed(iso)
           return (
@@ -296,16 +329,20 @@ function MonthCalendar({
               key={iso}
               onClick={() => onSelect(iso)}
               aria-pressed={isSelected}
-              aria-label={`${formatDayHeading(iso)}${count ? `, ${t('barber.schedule.count', { count })}` : ''}`}
+              aria-label={`${formatDayHeading(iso)}${count ? `, ${t('barber.schedule.count', { count })}` : ''}${load === 'full' ? `, ${t('barber.schedule.dayFull')}` : ''}`}
               className={`flex h-12 flex-col items-center justify-center gap-1 rounded-xl text-[15px] font-semibold ${
                 isSelected ? 'bg-ink text-ground' : dim ? 'text-faint hover:bg-surface' : 'text-ink hover:bg-surface'
               } ${iso === today && !isSelected ? 'ring-2 ring-accent ring-inset' : ''}`}
             >
               {Number(iso.slice(8))}
-              <span aria-hidden="true" className="flex h-1.5 gap-0.5">
-                {Array.from({ length: Math.min(count, 3) }, (_, i) => (
-                  <span key={i} className={`size-1.5 rounded-full ${isSelected ? 'bg-ground' : 'bg-accent'}`} />
-                ))}
+              <span aria-hidden="true" className="flex h-1.5 items-center gap-0.5">
+                {load === 'full' ? (
+                  <span className={`h-1 w-6 rounded-full ${isSelected ? 'bg-ground' : 'bg-accent'}`} />
+                ) : (
+                  Array.from({ length: load }, (_, i) => (
+                    <span key={i} className={`size-1.5 rounded-full ${isSelected ? 'bg-ground' : 'bg-accent'}`} />
+                  ))
+                )}
               </span>
             </button>
           )
@@ -324,6 +361,9 @@ function AppointmentRow({ appointment, dayLabel }: { appointment: Appointment; d
   const isChange = Boolean(appointment.originalStartTime)
   // Once it has started, a no-show can be marked instead of cancelling.
   const started = new Date(appointment.startTime).getTime() <= Date.now()
+  // A confirmed one can be moved or changed, unless the customer is waiting for an answer about it.
+  const editable = appointment.status === 'CONFIRMED' && !started && !isChange && !appointment.requestedStartTime
+  const [editing, setEditing] = useState(false)
 
   const action = useMutation({
     mutationFn: (kind: 'confirm' | 'reject' | 'cancel' | 'noShow') => barberMeApi[kind](appointment.id),
@@ -338,8 +378,12 @@ function AppointmentRow({ appointment, dayLabel }: { appointment: Appointment; d
     action.mutate(kind)
   }
 
+  if (editing) return <AppointmentForm appointment={appointment} onDone={() => setEditing(false)} />
+
   return (
-    <article className={`flex flex-col gap-3 rounded-2xl bg-surface p-4 ${pending ? 'border-2 border-accent' : ''}`}>
+    <article className={`relative flex flex-col gap-3 rounded-2xl bg-surface p-4 ${pending ? 'border-2 border-accent' : ''}`}>
+      {/* The one sticker in the requests: this is a change of time, not a new booking. */}
+      {isChange && <Sticker className="absolute -top-3 right-3">{t('barber.schedule.changeBadge')}</Sticker>}
       <div className="flex items-start gap-4">
         <div className="flex w-16 shrink-0 flex-col">
           <span className="font-display text-2xl leading-none font-black">{formatTime(appointment.startTime)}</span>
@@ -352,11 +396,6 @@ function AppointmentRow({ appointment, dayLabel }: { appointment: Appointment; d
             {appointment.manual && (
               <span className="shrink-0 rounded-md bg-surface-2 px-1.5 py-0.5 text-[11px] font-semibold text-muted">
                 {t('barber.schedule.manualBadge')}
-              </span>
-            )}
-            {isChange && (
-              <span className="shrink-0 rounded-md bg-accent/20 px-1.5 py-0.5 text-[11px] font-semibold text-accent">
-                {t('barber.schedule.changeBadge')}
               </span>
             )}
             {noShow && (
@@ -417,9 +456,21 @@ function AppointmentRow({ appointment, dayLabel }: { appointment: Appointment; d
             </Button>
           )
         ) : (
-          <Button variant="ghost" className="ml-auto min-h-11 px-3 text-sm" disabled={action.isPending} onClick={() => run('cancel')}>
-            {t('barber.schedule.cancel')}
-          </Button>
+          <>
+            {editable && (
+              <Button variant="ghost" className="ml-auto min-h-11 px-3 text-sm" onClick={() => setEditing(true)}>
+                {t('barber.schedule.edit')}
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              className={`min-h-11 px-3 text-sm ${editable ? '' : 'ml-auto'}`}
+              disabled={action.isPending}
+              onClick={() => run('cancel')}
+            >
+              {t('barber.schedule.cancel')}
+            </Button>
+          </>
         )}
       </div>
     </article>

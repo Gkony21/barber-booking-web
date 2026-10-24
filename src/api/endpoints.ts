@@ -87,9 +87,9 @@ export const barberMeApi = {
   createProfile: (body: BarberProfileInput) => api<Barber>('/barbers/me', { method: 'POST', body }),
   updateProfile: (body: BarberProfileInput) => api<Barber>('/barbers/me', { method: 'PUT', body }),
 
-  /** Free quarter hours within working hours, for entering a booking by hand. */
-  availability: (minutes: number, date: string) =>
-    api<Availability>(`/barbers/me/availability?minutes=${minutes}&date=${date}`),
+  /** Free quarter hours within working hours, for entering a booking by hand; `except` is one being moved. */
+  availability: (minutes: number, date: string, except?: number) =>
+    api<Availability>(`/barbers/me/availability?minutes=${minutes}&date=${date}${except ? `&except=${except}` : ''}`),
   bookManually: (body: {
     serviceId: number
     extraIds: number[]
@@ -100,6 +100,11 @@ export const barberMeApi = {
   }) =>
     api<Appointment>('/barbers/me/appointments', { method: 'POST', body }),
   appointments: (from: string, to: string) => api<Appointment[]>(`/barbers/me/appointments?from=${from}&to=${to}`),
+  /** Moves a confirmed appointment or changes its services (and, for one entered by hand, its details). */
+  updateAppointment: (
+    id: number,
+    body: { serviceId: number; extraIds: number[]; startTime: string; customerName?: string; customerPhone?: string; note?: string },
+  ) => api<Appointment>(`/barbers/me/appointments/${id}`, { method: 'PUT', body }),
   confirm: (id: number) => api<Appointment>(`/barbers/me/appointments/${id}/confirm`, { method: 'POST' }),
   reject: (id: number) => api<Appointment>(`/barbers/me/appointments/${id}/reject`, { method: 'POST' }),
   cancel: (id: number) => api<Appointment>(`/barbers/me/appointments/${id}/cancel`, { method: 'POST' }),
