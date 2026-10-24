@@ -1,8 +1,8 @@
-import { useState, type FormEvent } from 'react'
+import { useDeferredValue, useState, type FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { barberMeApi } from '../../api/endpoints'
-import type { Appointment } from '../../api/types'
+import type { Appointment, Client } from '../../api/types'
 import { Button } from '../../components/Button'
 import { Notice } from '../../components/States'
 import { TextField } from '../../components/TextField'
@@ -25,6 +25,7 @@ export function AppointmentForm({
   initialDate,
   initialTime,
   walkIn = false,
+  prefill,
 }: {
   onDone: (saved: boolean) => void
   appointment?: Appointment
@@ -33,6 +34,8 @@ export function AppointmentForm({
   initialTime?: string
   /** "Τώρα": someone just sat down, so the current quarter hour, whatever the working hours. */
   walkIn?: boolean
+  /** "Ξανά το ίδιο" from a customer's card: who, and what they had last time. */
+  prefill?: Client
 }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
@@ -44,23 +47,43 @@ export function AppointmentForm({
   const ownDetails = !editing || appointment.manual
 
   const [today] = useState(() => bookableDays(1)[0].iso)
-  const [serviceId, setServiceId] = useState<number | null>(appointment?.serviceId ?? null)
-  const [extraIds, setExtraIds] = useState<number[]>(appointment?.extras.map((e) => e.serviceId) ?? [])
+  const [serviceId, setServiceId] = useState<number | null>(appointment?.serviceId ?? prefill?.lastServiceId ?? null)
+  const [extraIds, setExtraIds] = useState<number[]>(appointment?.extras.map((e) => e.serviceId) ?? prefill?.lastExtraIds ?? [])
   const [date, setDate] = useState(appointment ? athensDate(appointment.startTime) : (initialDate ?? today))
   const [time, setTime] = useState(() => {
     const start = appointment ? formatTime(appointment.startTime) : walkIn ? currentQuarter() : initialTime
     return start && TIMES.includes(start) ? start : nextQuarter()
   })
-  const [name, setName] = useState(appointment?.manual ? appointment.customerName : '')
-  const [phone, setPhone] = useState(appointment?.manual ? (appointment.customerPhone ?? '') : '')
+  const [name, setName] = useState(appointment?.manual ? appointment.customerName : (prefill?.name ?? ''))
+  const [phone, setPhone] = useState(appointment?.manual ? (appointment.customerPhone ?? '') : (prefill?.phone ?? ''))
+  // A known customer picked from the suggestions (or the card): shows their note and no-shows.
+  const [picked, setPicked] = useState<Client | null>(prefill ?? null)
+  const typed = useDeferredValue(name.trim())
+  const suggestions = useQuery({
+    queryKey: ['barber', 'clients', 'search', typed],
+    queryFn: () => barberMeApi.clients(typed, 6),
+    enabled: !editing && picked === null && typed.length >= 2,
+  })
   const [note, setNote] = useState(appointment?.manual ? (appointment.note ?? '') : '')
   // Off: only free times within working hours. On: any quarter hour, e.g. a regular at 23:00.
   const [anyTime, setAnyTime] = useState(walkIn)
 
   // Starts on the service the barber shows on their card, usually the plain haircut.
-  const chosenService = serviceId ?? (active.find((s) => s.featured) ?? active[0])?.id ?? null
+  const offered = (id: number | null) => (id !== null && active.some((s) => s.id === id) ? id : null)
+  const chosenService = offered(serviceId) ?? (active.find((s) => s.featured) ?? active[0])?.id ?? null
+
+  // Picking a known customer fills in their number and what they had last time.
+  const pick = (client: Client) => {
+    setPicked(client)
+    setName(client.name)
+    setPhone(client.phone ?? '')
+    if (client.lastServiceId !== null) setServiceId(client.lastServiceId)
+    setExtraIds(client.lastExtraIds)
+  }
+  // Extras still on offer (one had last time may since be hidden).
+  const chosenExtras = extraIds.filter((id) => extras.some((s) => s.id === id))
   const minutes = (services.data ?? [])
-    .filter((s) => s.id === chosenService || extraIds.includes(s.id))
+    .filter((s) => s.id === chosenService || chosenExtras.includes(s.id))
     .reduce((sum, s) => sum + s.durationMinutes, 0)
 
   const free = useQuery({
@@ -77,7 +100,7 @@ export function AppointmentForm({
 
   const save = useMutation({
     mutationFn: () => {
-      const start = { serviceId: chosenService!, extraIds, startTime: `${date}T${chosenTime}` }
+      const start = { serviceId: chosenService!, extraIds: chosenExtras, startTime: `${date}T${chosenTime}` }
       const details = { customerName: name.trim(), customerPhone: phone.trim() || undefined, note: note.trim() || undefined }
       if (!editing) return barberMeApi.bookManually({ ...start, ...details })
       return barberMeApi.updateAppointment(appointment.id, ownDetails ? { ...start, ...details } : start)
@@ -114,6 +137,42 @@ export function AppointmentForm({
             : t('barber.schedule.addHint')}
         </p>
       </div>
+
+      {ownDetails && (
+        <div className="flex flex-col gap-2">
+          <TextField
+            onSurface
+            label={t('barber.schedule.customerName')}
+            required
+            maxLength={100}
+            autoComplete="off"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value)
+              setPicked(null)
+            }}
+          />
+          {suggestions.data && suggestions.data.length > 0 && (
+            <ul aria-label={t('barber.clients.suggestions')} className="flex flex-col overflow-hidden rounded-md bg-surface-2">
+              {suggestions.data.map((client) => (
+                <li key={client.key}>
+                  <button type="button" onClick={() => pick(client)} className="flex min-h-12 w-full items-center gap-3 px-3 text-left hover:bg-line">
+                    <span className="flex-1 truncate font-semibold">{client.name}</span>
+                    <span className="text-sm text-muted">{client.phone ?? t('barber.clients.visits', { count: client.visits })}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {picked && (picked.note || picked.noShows > 0) && (
+            <p className="rounded-md border-l-4 border-accent bg-surface-2 px-3 py-2 text-sm">
+              {picked.note && <span className="block">{picked.note}</span>}
+              {picked.noShows > 0 && <span className="block font-semibold text-danger">{t('barber.clients.noShows', { count: picked.noShows })}</span>}
+            </p>
+          )}
+          <TextField onSurface label={t('barber.schedule.customerPhone')} type="tel" maxLength={30} value={phone} onChange={(e) => setPhone(e.target.value)} />
+        </div>
+      )}
 
       <label className="flex flex-col gap-1.5 text-sm font-medium text-muted">
         {t('barber.schedule.service')}
@@ -174,11 +233,7 @@ export function AppointmentForm({
       </label>
 
       {ownDetails && (
-        <>
-          <TextField onSurface label={t('barber.schedule.customerName')} required maxLength={100} value={name} onChange={(e) => setName(e.target.value)} />
-          <TextField onSurface label={t('barber.schedule.customerPhone')} type="tel" maxLength={30} value={phone} onChange={(e) => setPhone(e.target.value)} />
-          <TextField onSurface label={t('barber.schedule.note')} maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} />
-        </>
+        <TextField onSurface label={t('barber.schedule.note')} maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} />
       )}
 
       {save.isError && <Notice tone="error">{errorMessage(save.error, t)}</Notice>}

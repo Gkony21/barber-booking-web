@@ -392,7 +392,16 @@ function AppointmentRow({ appointment, dayLabel }: { appointment: Appointment; d
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           {dayLabel && <span className="text-sm font-semibold text-accent first-letter:uppercase">{dayLabel}</span>}
           <span className="flex min-w-0 items-center gap-2">
-            <span className="truncate font-semibold">{appointment.customerName}</span>
+            {appointment.clientKey ? (
+              <Link
+                to={`/barber/clients/${encodeURIComponent(appointment.clientKey)}`}
+                className="truncate font-semibold underline decoration-line decoration-2 underline-offset-4 hover:decoration-accent"
+              >
+                {appointment.customerName}
+              </Link>
+            ) : (
+              <span className="truncate font-semibold">{appointment.customerName}</span>
+            )}
             {appointment.manual && (
               <span className="shrink-0 rounded-md bg-surface-2 px-1.5 py-0.5 text-[11px] font-semibold text-muted">
                 {t('barber.schedule.manualBadge')}

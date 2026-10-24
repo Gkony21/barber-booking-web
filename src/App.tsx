@@ -20,6 +20,8 @@ const AdminBarbersPage = lazy(() => import('./pages/admin/AdminBarbersPage').the
 const BarberHoursPage = lazy(() => import('./pages/barber/BarberHoursPage').then((m) => ({ default: m.BarberHoursPage })))
 const BarberProfilePage = lazy(() => import('./pages/barber/BarberProfilePage').then((m) => ({ default: m.BarberProfilePage })))
 const BarberSchedulePage = lazy(() => import('./pages/barber/BarberSchedulePage').then((m) => ({ default: m.BarberSchedulePage })))
+const ClientsPage = lazy(() => import('./pages/barber/ClientsPage').then((m) => ({ default: m.ClientsPage })))
+const ClientPage = lazy(() => import('./pages/barber/ClientsPage').then((m) => ({ default: m.ClientPage })))
 const BarberServicesPage = lazy(() => import('./pages/barber/BarberServicesPage').then((m) => ({ default: m.BarberServicesPage })))
 const TermsPage = lazy(() => import('./pages/LegalPage').then((m) => ({ default: m.TermsPage })))
 const PrivacyPage = lazy(() => import('./pages/LegalPage').then((m) => ({ default: m.PrivacyPage })))
@@ -39,6 +41,8 @@ export function App() {
           }
         />
         <Route path="barber" element={<RequireAuth role="BARBER"><BarberSchedulePage /></RequireAuth>} />
+        <Route path="barber/clients" element={<RequireAuth role="BARBER"><ClientsPage /></RequireAuth>} />
+        <Route path="barber/clients/:key" element={<RequireAuth role="BARBER"><ClientPage /></RequireAuth>} />
         <Route path="barber/services" element={<RequireAuth role="BARBER"><BarberServicesPage /></RequireAuth>} />
         <Route path="barber/hours" element={<RequireAuth role="BARBER"><BarberHoursPage /></RequireAuth>} />
         <Route path="barber/profile" element={<RequireAuth role="BARBER"><BarberProfilePage /></RequireAuth>} />
