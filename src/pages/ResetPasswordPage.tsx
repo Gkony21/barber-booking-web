@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { authApi } from '../api/endpoints'
 import { Button } from '../components/Button'
+import { buttonClass } from '../components/buttonStyles'
 import { PasswordField } from '../components/PasswordField'
 import { Notice } from '../components/States'
 import { errorMessage, hasCode } from '../lib/errors'
@@ -38,9 +39,9 @@ export function ResetPasswordPage() {
   if (done) {
     return (
       <div className="flex flex-col gap-6 pt-10">
-        <h1 className="font-display text-5xl leading-none font-extrabold text-accent uppercase">{t('auth.resetDoneTitle')}</h1>
+        <h1 className="font-display text-5xl leading-none font-black italic text-accent uppercase">{t('auth.resetDoneTitle')}</h1>
         <p className="text-muted">{t('auth.resetDoneBody')}</p>
-        <Link to="/login" className="flex min-h-12 items-center justify-center rounded-2xl bg-accent font-semibold text-ground">
+        <Link to="/login" className={buttonClass('primary', 'w-full')}>
           {t('auth.loginButton')}
         </Link>
       </div>
@@ -49,7 +50,7 @@ export function ResetPasswordPage() {
 
   return (
     <div className="flex flex-col gap-8 pt-6">
-      <h1 className="font-display text-5xl leading-none font-extrabold uppercase">{t('auth.resetTitle')}</h1>
+      <h1 className="font-display text-[52px] leading-[0.88] font-black italic uppercase">{t('auth.resetTitle')}</h1>
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
         <PasswordField
           label={t('auth.newPassword')}

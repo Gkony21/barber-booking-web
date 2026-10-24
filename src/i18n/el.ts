@@ -76,6 +76,8 @@ const el = {
   },
   barbers: {
     title: 'Βρες barber',
+    // The scrolling strip on the home page; capitals carry no accents in Greek.
+    tape: ['ΚΛΕΙΣΕ ΣΕ 30\'\'', 'ΧΩΡΙΣ ΟΥΡΑ', 'ΧΩΡΙΣ ΤΗΛΕΦΩΝΑ', 'ΠΛΗΡΩΝΕΙΣ ΣΤΟ ΚΑΤΑΣΤΗΜΑ'],
     cityPlaceholder: 'Πόλη (π.χ. Αθήνα)',
     empty: 'Δεν βρέθηκαν barbers εδώ ακόμα.',
     emptyToday: 'Δεν υπάρχει ελεύθερη ώρα σήμερα. Δες όλους τους barbers για τις επόμενες μέρες.',
@@ -124,6 +126,7 @@ const el = {
     seeAppointments: 'Τα ραντεβού μου',
     ticketBooked: 'Κλείστηκε',
     ticketRequested: 'Το αίτημα στάλθηκε',
+    ticketWaiting: 'Σε περιμένουμε',
     ticketChangeRequested: 'Η αλλαγή στάλθηκε',
     changeBody: 'Μέχρι να απαντηθεί, ισχύει η τωρινή ώρα: {{when}}. Θα σου στείλουμε email.',
     ticketService: 'Υπηρεσία',

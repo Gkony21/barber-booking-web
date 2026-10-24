@@ -62,7 +62,7 @@ export function BarberLinkCard({ barber }: { barber: Barber }) {
 
   return (
     <section className="flex flex-col gap-3 rounded-2xl border border-accent/40 bg-surface p-4">
-      <h2 className="font-display text-xl font-extrabold uppercase">{t('barber.profile.link')}</h2>
+      <h2 className="font-display text-xl font-black italic uppercase">{t('barber.profile.link')}</h2>
       <p className="font-semibold break-all text-accent">{url}</p>
       <p className="text-sm text-muted">{t('barber.profile.linkHint')}</p>
 

@@ -4,13 +4,13 @@ import { mediaUrl } from '../api/client'
 export function Avatar({ name, url, size = 56 }: { name: string; url: string | null; size?: number }) {
   const style = { width: size, height: size }
   if (url) {
-    return <img src={mediaUrl(url)} alt="" style={style} className="shrink-0 rounded-xl bg-surface-2 object-cover" />
+    return <img src={mediaUrl(url)} alt="" style={style} className="shrink-0 rounded-md bg-surface-2 object-cover" />
   }
   return (
     <span
       aria-hidden="true"
       style={{ ...style, fontSize: size * 0.36 }}
-      className="flex shrink-0 items-center justify-center rounded-xl bg-surface-2 font-display font-extrabold text-accent"
+      className="flex shrink-0 items-center justify-center rounded-md bg-surface-2 font-display font-black text-accent italic"
     >
       {initials(name)}
     </span>

@@ -29,11 +29,11 @@ export function Gallery({ title, photos, layout = 'grid' }: { title?: string; ph
               type="button"
               aria-label={[t('booking.photoOf', { index: index + 1, total: photos.length }), photo.caption].filter(Boolean).join(': ')}
               onClick={() => setOpen(index)}
-              className="relative size-[86px] shrink-0 overflow-hidden rounded-[14px] bg-surface"
+              className="relative size-[86px] shrink-0 overflow-hidden rounded-md bg-surface"
             >
               <img src={mediaUrl(photo.url)} alt="" loading="lazy" className="size-full object-cover" />
               {isLastWithMore && (
-                <span className="absolute inset-0 flex items-center justify-center bg-ground/65 font-display text-xl font-extrabold">
+                <span className="absolute inset-0 flex items-center justify-center bg-ground/65 font-display text-xl font-black">
                   +{rest + 1}
                 </span>
               )}

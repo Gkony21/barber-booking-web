@@ -25,7 +25,7 @@ export function BarberSchedulePage() {
     return (
       <div className="flex flex-col gap-6 pt-4">
         <div className="flex flex-col gap-2">
-          <h1 className="font-display text-5xl leading-none font-extrabold uppercase">{t('barber.setupTitle')}</h1>
+          <h1 className="font-display text-[52px] leading-[0.88] font-black italic uppercase">{t('barber.setupTitle')}</h1>
           <p className="text-muted">{t('barber.setupBody')}</p>
         </div>
         <ProfileForm barber={null} />
@@ -99,7 +99,7 @@ function Schedule({ barber }: { barber: Barber }) {
 
   return (
     <div className="flex flex-col gap-7 pt-4">
-      <h1 className="font-display text-5xl leading-none font-extrabold uppercase">{t('barber.schedule.title')}</h1>
+      <h1 className="font-display text-[52px] leading-[0.88] font-black italic uppercase">{t('barber.schedule.title')}</h1>
 
       {barber.status === 'PENDING' && <Notice>{t('barber.pendingApproval')}</Notice>}
       {barber.status === 'SUSPENDED' && <Notice tone="error">{t('barber.suspended')}</Notice>}
@@ -169,7 +169,7 @@ function Schedule({ barber }: { barber: Barber }) {
 
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="font-display text-xl font-extrabold uppercase first-letter:uppercase">{dayTitle}</h2>
+          <h2 className="font-display text-xl font-black italic uppercase first-letter:uppercase">{dayTitle}</h2>
         </div>
         <div role="radiogroup" aria-label={t('barber.schedule.view')} className="flex gap-1 rounded-xl bg-surface p-1">
           {([false, true] as const).map((only) => (
@@ -264,7 +264,7 @@ function MonthCalendar({
   return (
     <section className="flex flex-col gap-3" aria-label={t('barber.schedule.calendar')}>
       <div className="flex items-center gap-2">
-        <h2 className="flex-1 font-display text-2xl font-extrabold uppercase">
+        <h2 className="flex-1 font-display text-2xl font-black italic uppercase">
           {monthTitleFormat.format(new Date(Date.UTC(year, month - 1, 15)))}
         </h2>
         <button className="min-h-10 rounded-xl bg-surface px-3 text-sm font-semibold text-accent hover:bg-surface-2" onClick={onToday}>
@@ -342,7 +342,7 @@ function AppointmentRow({ appointment, dayLabel }: { appointment: Appointment; d
     <article className={`flex flex-col gap-3 rounded-2xl bg-surface p-4 ${pending ? 'border-2 border-accent' : ''}`}>
       <div className="flex items-start gap-4">
         <div className="flex w-16 shrink-0 flex-col">
-          <span className="font-display text-2xl leading-none font-extrabold">{formatTime(appointment.startTime)}</span>
+          <span className="font-display text-2xl leading-none font-black">{formatTime(appointment.startTime)}</span>
           <span className="text-sm text-muted">{formatTime(appointment.endTime)}</span>
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">

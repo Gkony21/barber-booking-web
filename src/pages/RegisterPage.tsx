@@ -7,6 +7,7 @@ import { Notice } from '../components/States'
 import { PasswordField } from '../components/PasswordField'
 import { TextField } from '../components/TextField'
 import { errorMessage } from '../lib/errors'
+import { Logo } from '../components/Logo'
 
 export function RegisterPage() {
   const { t } = useTranslation()
@@ -42,7 +43,11 @@ export function RegisterPage() {
   return (
     <div className="flex flex-col gap-8 pt-6">
       <div className="flex flex-col gap-2">
-        <h1 className="font-display text-5xl leading-none font-extrabold uppercase">{t('auth.registerTitle')}</h1>
+        {/* The logo as a sticker: the one playful moment on this screen. */}
+        <span className="mb-4 self-start text-accent">
+          <Logo height={54} sticker label={t('app.name')} />
+        </span>
+        <h1 className="font-display text-[52px] leading-[0.88] font-black italic uppercase">{t('auth.registerTitle')}</h1>
         <p className="text-muted">{t('auth.registerSubtitle')}</p>
       </div>
 

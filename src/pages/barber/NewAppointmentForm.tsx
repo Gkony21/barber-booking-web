@@ -87,7 +87,7 @@ export function NewAppointmentForm({
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4 rounded-2xl border-2 border-accent bg-surface p-4" noValidate>
       <div className="flex flex-col gap-1">
-        <h2 className="font-display text-2xl font-extrabold uppercase">{t('barber.schedule.addTitle')}</h2>
+        <h2 className="font-display text-2xl font-black italic uppercase">{t('barber.schedule.addTitle')}</h2>
         <p className="text-sm text-muted">{t('barber.schedule.addHint')}</p>
       </div>
 

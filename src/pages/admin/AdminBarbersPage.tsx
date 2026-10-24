@@ -20,7 +20,7 @@ export function AdminBarbersPage() {
 
   return (
     <div className="flex flex-col gap-6 pt-4">
-      <h1 className="font-display text-5xl leading-none font-extrabold uppercase">{t('admin.title')}</h1>
+      <h1 className="font-display text-[52px] leading-[0.88] font-black italic uppercase">{t('admin.title')}</h1>
 
       <div role="tablist" className="flex gap-1 rounded-2xl bg-surface p-1">
         {TABS.map((status) => (
@@ -71,7 +71,7 @@ function BarberCard({ barber, onApproved }: { barber: AdminBarber; onApproved: (
     <article className="flex flex-col gap-3 rounded-2xl bg-surface p-4">
       <div className="flex items-center gap-3">
         <Avatar name={barber.name} url={barber.avatarUrl} size={48} />
-        <h2 className="font-display text-2xl leading-tight font-extrabold uppercase">{barber.name}</h2>
+        <h2 className="font-display text-2xl leading-tight font-black italic uppercase">{barber.name}</h2>
       </div>
       <div className="flex flex-col gap-1">
         {barber.specialty && <p className="text-sm text-accent">{barber.specialty}</p>}

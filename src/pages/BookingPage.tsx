@@ -13,6 +13,7 @@ import { BookingTicket } from '../components/BookingTicket'
 import { NotFoundPage } from './NotFoundPage'
 import { DefaultCover } from '../components/DefaultCover'
 import { Button } from '../components/Button'
+import { buttonClass } from '../components/buttonStyles'
 import { DayPicker } from '../components/DayPicker'
 import { ErrorState, Loading, Notice } from '../components/States'
 import { errorMessage, hasCode } from '../lib/errors'
@@ -84,12 +85,12 @@ function BarberHero({ barber }: { barber: Barber }) {
         <BackLink to="/" label={t('nav.back')} />
       </div>
       <div className="absolute inset-x-5 -bottom-9 flex items-end gap-3.5">
-        <span className="rounded-[22px] border-4 border-ground">
+        <span className="-rotate-3 rounded-md border-4 border-ground">
           <Avatar name={barber.name} url={barber.avatarUrl} size={80} />
         </span>
         <div className="flex min-w-0 flex-col gap-0.5 pb-1.5">
-          <span className="text-[13px] font-semibold text-accent">{t('booking.eyebrow')}</span>
-          <h1 className="font-display text-[40px] leading-[0.95] font-extrabold break-words uppercase">{barber.name}</h1>
+          <span className="font-display text-sm font-black tracking-wide text-accent uppercase">{t('booking.eyebrow')}</span>
+          <h1 className="font-display text-[44px] leading-[0.88] font-black italic break-words uppercase">{barber.name}</h1>
         </div>
       </div>
     </section>
@@ -191,7 +192,7 @@ function BookingForm({ barber, services, moving }: { barber: Barber; services: S
     <>
       {moving && (
         <section className="flex flex-col gap-1 rounded-2xl border-2 border-accent bg-surface p-4">
-          <h2 className="font-display text-xl font-extrabold uppercase">{t('booking.moveTitle')}</h2>
+          <h2 className="font-display text-xl font-black italic uppercase">{t('booking.moveTitle')}</h2>
           <p className="font-semibold">{servicesOf(moving)}</p>
           <p className="text-sm text-muted first-letter:uppercase">
             {t('booking.moveFrom')}: {formatAppointmentTime(moving.startTime)}
@@ -203,7 +204,7 @@ function BookingForm({ barber, services, moving }: { barber: Barber; services: S
           every line shows it can be picked; one is filled. */}
       {!moving && (
         <section role="radiogroup" aria-labelledby="step-service" className="flex flex-col gap-1">
-          <h2 id="step-service" className="mb-2 font-display text-[26px] font-extrabold uppercase">
+          <h2 id="step-service" className="mb-2 font-display text-[26px] font-black italic uppercase">
             {t('booking.stepService')}
           </h2>
           {mains.map((s) => {
@@ -228,7 +229,7 @@ function BookingForm({ barber, services, moving }: { barber: Barber; services: S
                   <span className="flex w-full items-baseline gap-2">
                     <span className="text-[17px] font-semibold">{s.name}</span>
                     <span aria-hidden="true" className="min-w-6 flex-1 -translate-y-1 border-b-2 border-dotted border-line" />
-                    <span className="font-display text-[22px] font-extrabold">{formatPrice(s.price)}</span>
+                    <span className="font-display text-[22px] font-black">{formatPrice(s.price)}</span>
                   </span>
                   {s.description && <span className="text-[13px] leading-snug text-ink/75">{s.description}</span>}
                   <span className="text-[13px] text-muted">{t('common.minutes', { count: s.durationMinutes })}</span>
@@ -268,7 +269,7 @@ function BookingForm({ barber, services, moving }: { barber: Barber; services: S
                   {s.description && <span className="text-[13px] text-muted">{s.description}</span>}
                 </span>
                 <span className="flex flex-col items-end">
-                  <span className="font-display text-lg font-extrabold">
+                  <span className="font-display text-lg font-black">
                     {s.price === 0 ? t('common.free') : `+${formatPrice(s.price)}`}
                   </span>
                   <span className="text-[12px] text-muted">+{t('common.minutes', { count: s.durationMinutes })}</span>
@@ -304,7 +305,9 @@ function BookingForm({ barber, services, moving }: { barber: Barber; services: S
                   setTime(slot)
                   book.reset()
                 }}
-                className={`min-h-12 rounded-xl font-semibold ${selected ? 'bg-accent text-ground' : 'bg-surface text-ink hover:bg-surface-2'}`}
+                className={`min-h-12 rounded-md font-semibold transition-[transform,box-shadow] duration-100 motion-reduce:transition-none ${
+                  selected ? '-rotate-2 bg-accent text-ground shadow-lift' : 'bg-surface text-ink hover:bg-surface-2'
+                }`}
               >
                 {slot}
               </button>
@@ -359,7 +362,7 @@ function BookingForm({ barber, services, moving }: { barber: Barber; services: S
           {!session ? (
             <Link
               to={`/login?next=${encodeURIComponent(location.pathname)}`}
-              className="flex min-h-14 items-center justify-center rounded-2xl bg-accent font-bold text-ground"
+              className={buttonClass('primary', 'min-h-14 w-full')}
             >
               {t('booking.loginToBook')}
             </Link>
@@ -377,7 +380,7 @@ function BookingForm({ barber, services, moving }: { barber: Barber; services: S
                   : t('booking.pickTime')}
               </span>
               <span className="flex flex-col items-end leading-none">
-                <span className="font-display text-2xl font-extrabold">{formatPrice(totalPrice)}</span>
+                <span className="font-display text-2xl font-black">{formatPrice(totalPrice)}</span>
                 {extraIds.length > 0 && <span className="text-xs font-semibold">{t('common.minutes', { count: totalMinutes })}</span>}
               </span>
             </Button>
@@ -390,5 +393,5 @@ function BookingForm({ barber, services, moving }: { barber: Barber; services: S
 }
 
 function StepTitle({ children }: { children: React.ReactNode }) {
-  return <h2 className="font-display text-xl font-extrabold uppercase">{children}</h2>
+  return <h2 className="font-display text-xl font-black italic uppercase">{children}</h2>
 }

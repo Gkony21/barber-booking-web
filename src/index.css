@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-/* FADE design tokens (direction B): charcoal ground, amber accent, condensed display type. */
+/* FADE design tokens: charcoal ground, amber accent. Look: the "Γ + Α" mix, a box logo and big
+   italic condensed titles with sharp corners, plus pressable buttons and one tilted sticker per screen. */
 @theme {
   --color-ground: #111214;
   --color-surface: #1B1D21;
@@ -14,8 +15,18 @@
   --color-danger: #FF8A80;
   --color-success: #7FD8A6;
 
-  --font-display: "Fira Sans Condensed", system-ui, sans-serif;
+  --font-display: "Fira Sans Extra Condensed", "Arial Narrow", system-ui, sans-serif;
   --font-sans: "Fira Sans", system-ui, sans-serif;
+
+  /* Sharp corners everywhere: the rounded sizes used across the app all become small radii. */
+  --radius-lg: 6px;
+  --radius-xl: 6px;
+  --radius-2xl: 6px;
+  --radius-3xl: 10px;
+
+  /* A hard white shadow under buttons and picked items; pressing moves them onto it. */
+  --shadow-press: 4px 4px 0 var(--color-ink);
+  --shadow-lift: 3px 3px 0 var(--color-ink);
 }
 
 @layer base {
@@ -54,4 +65,23 @@
 @keyframes ticket-line {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
+}
+
+/* Printed-poster dots, where there is no photo yet. */
+@utility halftone {
+  background-color: var(--color-surface-2);
+  background-image: radial-gradient(circle, rgb(242 242 240 / 0.13) 1.1px, transparent 1.5px);
+  background-size: 7px 7px;
+}
+
+/* The strip of text that scrolls along the home page; its text is repeated twice. */
+@keyframes tape {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* "Κλείστηκε" lands on the booking ticket like a rubber stamp. */
+@keyframes stamp {
+  from { scale: 2.2; opacity: 0; }
+  to { scale: 1; opacity: 1; }
 }

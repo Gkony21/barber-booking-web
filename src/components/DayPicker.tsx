@@ -67,7 +67,7 @@ export function DayPicker({
           <ArrowButton label={t('booking.laterDays')} disabled={edges.atEnd} onClick={() => page(1)} direction="right" />
         </div>
       </div>
-      <div ref={row} className="-mx-5 flex snap-x gap-2 overflow-x-auto scroll-px-5 px-5 pb-1 [scrollbar-width:none]">
+      <div ref={row} className="-mx-5 flex snap-x gap-2 overflow-x-auto scroll-px-5 px-5 pt-0.5 pb-1.5 [scrollbar-width:none]">
         {days.map((d) => {
           const isSelected = d.iso === selected
           const status = statusOf?.(d.iso)
@@ -79,12 +79,16 @@ export function DayPicker({
               aria-pressed={isSelected}
               aria-label={note ? `${d.weekday} ${d.day}, ${note}` : `${d.weekday} ${d.day}`}
               onClick={() => onSelect(d.iso)}
-              className={`flex min-h-17 w-14 shrink-0 snap-start flex-col items-center justify-center gap-0.5 rounded-2xl ${
-                isSelected ? 'bg-ink text-ground' : unavailable ? 'bg-surface/50 text-faint' : 'bg-surface text-ink hover:bg-surface-2'
+              className={`flex min-h-17 w-14 shrink-0 snap-start flex-col items-center justify-center gap-0.5 rounded-md transition-[transform,box-shadow] duration-100 motion-reduce:transition-none ${
+                isSelected
+                  ? 'bg-accent text-ground shadow-lift'
+                  : unavailable
+                    ? 'border-2 border-dashed border-line text-faint'
+                    : 'bg-surface text-ink hover:bg-surface-2'
               }`}
             >
-              <span className="text-xs font-semibold uppercase">{d.weekday}</span>
-              <span className={`font-display text-2xl font-extrabold ${unavailable && !isSelected ? 'line-through decoration-2' : ''}`}>{d.day}</span>
+              <span className="font-display text-[13px] font-black tracking-wide uppercase">{d.weekday}</span>
+              <span className={`font-display text-2xl font-black ${unavailable && !isSelected ? 'line-through decoration-2' : ''}`}>{d.day}</span>
               {note && <span className="-mt-0.5 text-[10px] leading-none font-semibold">{note}</span>}
             </button>
           )
