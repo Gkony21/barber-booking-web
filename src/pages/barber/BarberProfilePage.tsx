@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { ErrorState, Loading } from '../../components/States'
 import { BarberLinkCard } from './BarberLinkCard'
+import { NotificationsCard } from './NotificationsCard'
 import { AvatarEditor, CoverEditor, WorkPhotosEditor } from './PhotoEditors'
 import { ProfileForm } from './ProfileForm'
 import { ShopSection } from './ShopSection'
@@ -21,6 +22,7 @@ export function BarberProfilePage() {
       {profile.data && <CoverEditor barber={profile.data} />}
       {profile.data && <AvatarEditor barber={profile.data} />}
       {profile.data && <BarberLinkCard key={profile.data.slug} barber={profile.data} />}
+      {profile.data && <NotificationsCard />}
       <ProfileForm key={profile.data?.id ?? 'new'} barber={profile.data} />
       {profile.data && <ShopSection barber={profile.data} />}
       {profile.data && <WorkPhotosEditor />}

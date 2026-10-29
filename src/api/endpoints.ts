@@ -83,6 +83,16 @@ export const appointmentsApi = {
   moveAvailability: (id: number, date: string) => api<Availability>(`/appointments/${id}/availability?date=${date}`),
 }
 
+/** Phone notifications (Web Push) for the logged-in user. */
+export const pushApi = {
+  /** The server's public key, needed to subscribe; 404 when notifications are not set up. */
+  key: () => api<{ publicKey: string }>('/push/key'),
+  subscribe: (subscription: PushSubscriptionJSON) => api<void>('/push/subscriptions', { method: 'POST', body: subscription }),
+  unsubscribe: (endpoint: string) => api<void>('/push/unsubscribe', { method: 'POST', body: { endpoint } }),
+  /** Sends a test notification to every browser of this account. */
+  test: () => api<{ delivered: number }>('/push/test', { method: 'POST' }),
+}
+
 /** Endpoints for the logged-in barber's own profile, schedule and bookings. */
 export const barberMeApi = {
   profile: () => api<Barber>('/barbers/me'),

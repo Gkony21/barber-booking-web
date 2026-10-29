@@ -32,6 +32,8 @@ export default defineConfig({
       workbox: {
         // API responses are never cached: availability must always be live.
         navigateFallbackDenylist: [/^\/api/],
+        // Shows phone notifications sent by the API (public/push-sw.js).
+        importScripts: ['push-sw.js'],
       },
     }),
   ],
