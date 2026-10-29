@@ -13,6 +13,7 @@ import { Sticker } from '../../components/Street'
 import { confirmationText, reminderText } from '../../lib/messages'
 import { AppointmentForm } from './AppointmentForm'
 import { MessagePanel } from './MessagePanel'
+import { NotificationsCard } from './NotificationsCard'
 import { byDay, dayLoad, dayOfWeek, isOff, monthGrid, planDay } from './calendar'
 import { ProfileForm } from './ProfileForm'
 import { useMyBarber } from './useMyBarber'
@@ -112,6 +113,9 @@ function Schedule({ barber }: { barber: Barber }) {
   return (
     <div className="flex flex-col gap-7 pt-4">
       <h1 className="font-display text-[52px] leading-[0.88] font-black italic uppercase">{t('barber.schedule.title')}</h1>
+
+      {/* Until they are on in this phone: new requests should not wait for an email. */}
+      <NotificationsCard onlyWhenOff />
 
       {upcoming.isSuccess && (
         <section aria-label={t('barber.schedule.statsTitle')} className="grid grid-cols-3 gap-2">
